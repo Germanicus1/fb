@@ -6,7 +6,7 @@ import (
 	"github.com/Germanicus1/fb/internal/cli"
 )
 
-const version = "1.2.0"
+const version = "1.3.0"
 
 func main() {
 	if err := cli.Run(version); err != nil {

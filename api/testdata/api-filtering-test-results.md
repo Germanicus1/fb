@@ -1,6 +1,6 @@
 # API Filtering Capabilities Test Results
 
-**Test Time:** 2026-02-13T23:05:12+01:00
+**Test Time:** 2026-02-14T00:03:54+01:00
 
 **Baseline Ticket Count:** 64
 **Baseline Response Size:** 37074 bytes

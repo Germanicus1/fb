@@ -85,5 +85,5 @@
   ],
   "supports_server_side_filtering": false,
   "conclusion": "Server-side filtering is NOT supported. All tested parameters either return errors or do not affect results. Client-side filtering is required.",
-  "test_timestamp": "2026-02-13T23:05:12+01:00"
+  "test_timestamp": "2026-02-14T00:03:54+01:00"
 }

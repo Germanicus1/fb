@@ -2,27 +2,27 @@
   "uniqueness_analysis": {
     "total_bins": 22,
     "unique_bin_ids": [
-      "s48y7HnA8y48J7GFV",
-      "kX41z9DVeVthZGe5d",
-      "n5NOggxybrqxOtH3r",
       "VUXh55WKQEPNdmwR5",
-      "xcOV9LDyB7jIaD7KK",
       "yZukMyJIuih9LeFai",
       "dL3SuElfvxZg9PyTV",
-      "6c6ErycDKrKLz1oa6",
-      "t7QwCrdddppV5y7as",
       "cx7oRn0CK1SoAMn0x",
       "JP7N9CvXw71ysgxPz",
-      "0HJjrL3tPMXPy43GA",
-      "ioXVVoKXO4iF5bbNE",
       "KkAVc8VLQ5bp1U7sN",
-      "KfxMexsUVgAwBjEQc",
+      "n5NOggxybrqxOtH3r",
+      "s48y7HnA8y48J7GFV",
+      "kX41z9DVeVthZGe5d",
+      "xcOV9LDyB7jIaD7KK",
+      "pMmWAdXpxHYjxMpBM",
+      "0HJjrL3tPMXPy43GA",
       "50Ux6MQXvlMTeW8cP",
       "GdDbs6LyozRZo3oEG",
-      "DSCWOjVO2t6x2wmNW",
-      "pMmWAdXpxHYjxMpBM",
+      "6c6ErycDKrKLz1oa6",
+      "t7QwCrdddppV5y7as",
       "8l6427SLylzxn5JML",
       "6mFYX8RJYrlCmcbI9",
+      "ioXVVoKXO4iF5bbNE",
+      "KfxMexsUVgAwBjEQc",
+      "DSCWOjVO2t6x2wmNW",
       "bCZqjbYKazRBnVBIJ"
     ],
     "unique_bin_names": [],
@@ -45,5 +45,5 @@
     "No board data available, so board filtering not possible via this endpoint",
     "Client-side filtering required for both board and bin filtering"
   ],
-  "analysis_timestamp": "2026-02-13T23:05:14+01:00"
+  "analysis_timestamp": "2026-02-14T00:03:56+01:00"
 }

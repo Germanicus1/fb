@@ -26,23 +26,23 @@
     }
   ],
   "all_fields": [
-    "bin_id",
-    "completedDate",
-    "watch_ids",
-    "attachments",
-    "updatedAt",
+    "dueDate",
     "name",
+    "bin_id",
+    "ticketType_id",
+    "order",
+    "completedDate",
+    "attachments",
+    "watch_ids",
+    "updatedAt",
+    "_id",
     "description",
     "assigned_ids",
-    "ticketType_id",
     "checklists",
-    "enclosed_id",
-    "dueDate",
-    "order",
-    "_id"
+    "enclosed_id"
   ],
   "board_fields": [],
   "has_board_data": false,
   "requires_lookup": true,
-  "capture_timestamp": "2026-02-13T23:05:15+01:00"
+  "capture_timestamp": "2026-02-14T00:03:57+01:00"
 }

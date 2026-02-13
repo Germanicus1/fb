@@ -1,6 +1,6 @@
 # Board Data API Response Findings
 
-**Capture Time:** 2026-02-13T23:05:15+01:00
+**Capture Time:** 2026-02-14T00:03:57+01:00
 
 **Total Tickets in Response:** 64
 
@@ -15,20 +15,20 @@ No board-related fields found in the ticket response.
 
 ## All Available Fields
 
-- bin_id
-- completedDate
-- watch_ids
-- attachments
-- updatedAt
+- dueDate
 - name
+- bin_id
+- ticketType_id
+- order
+- completedDate
+- attachments
+- watch_ids
+- updatedAt
+- _id
 - description
 - assigned_ids
-- ticketType_id
 - checklists
 - enclosed_id
-- dueDate
-- order
-- _id
 
 ## Sample Tickets
 
