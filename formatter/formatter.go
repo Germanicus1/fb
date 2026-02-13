@@ -8,11 +8,13 @@ import (
 )
 
 const (
-	maxDescriptionLength     = 200
-	maxLineWidth             = 80
-	fieldIndent              = "  "     // 2 spaces for field labels
-	descriptionIndent        = "    "   // 4 spaces for wrapped lines
-	emptyDescriptionPlaceholder = "(none)" // Placeholder for empty descriptions
+	maxDescriptionLength        = 200
+	maxLineWidth                = 80
+	fieldIndent                 = "  "                        // 2 spaces for field labels
+	descriptionIndent           = "    "                      // 4 spaces for wrapped lines
+	emptyDescriptionPlaceholder = "(none)"                    // Placeholder for empty descriptions
+	noTicketsMessage            = "No tickets assigned to you."
+	ticketCountHeaderFormat     = "Found %d ticket(s) assigned to you:\n\n"
 )
 
 // FormatTicket formats a single ticket for display in the terminal
@@ -30,15 +32,14 @@ func FormatTicket(ticket models.Ticket) string {
 	return builder.String()
 }
 
-// FormatTickets formats tickets for display in the terminal
+// FormatTickets formats tickets for display in the terminal with full details
 func FormatTickets(tickets []models.Ticket) string {
 	if len(tickets) == 0 {
-		return "No tickets assigned to you."
+		return noTicketsMessage
 	}
 
 	var builder strings.Builder
-
-	builder.WriteString(fmt.Sprintf("Found %d ticket(s) assigned to you:\n\n", len(tickets)))
+	writeTicketHeader(&builder, len(tickets))
 
 	for i, ticket := range tickets {
 		if i > 0 {
@@ -52,6 +53,32 @@ func FormatTickets(tickets []models.Ticket) string {
 	}
 
 	return builder.String()
+}
+
+// FormatTicketsMinimal formats tickets in minimal mode showing only ID and Name
+func FormatTicketsMinimal(tickets []models.Ticket) string {
+	if len(tickets) == 0 {
+		return noTicketsMessage
+	}
+
+	var builder strings.Builder
+	writeTicketHeader(&builder, len(tickets))
+
+	for _, ticket := range tickets {
+		formatMinimalTicketLine(&builder, ticket)
+	}
+
+	return builder.String()
+}
+
+// writeTicketHeader writes the standard header showing ticket count
+func writeTicketHeader(builder *strings.Builder, count int) {
+	builder.WriteString(fmt.Sprintf(ticketCountHeaderFormat, count))
+}
+
+// formatMinimalTicketLine writes a single ticket in minimal format
+func formatMinimalTicketLine(builder *strings.Builder, ticket models.Ticket) {
+	builder.WriteString(fmt.Sprintf("[%s] %s\n", ticket.ID, ticket.Name))
 }
 
 // formatTicketHeader writes the ticket ID and name to the builder.
