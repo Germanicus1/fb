@@ -34,6 +34,7 @@ func parseFlags() (*Flags, error) {
 	fs.StringVar(&flags.QuickComment, "c", "", "Quick comment on checked-out ticket")
 	fs.BoolVar(&flags.ShowStatus, "o", false, "View current checkout status")
 	fs.BoolVar(&flags.Verbose, "verbose", false, "Enable verbose output")
+	fs.BoolVar(&flags.Verbose, "v", false, "Enable verbose output (short flag)")
 	fs.BoolVar(&flags.Verbose, "debug", false, "Enable debug output")
 
 	if err := fs.Parse(os.Args[1:]); err != nil {

@@ -46,7 +46,7 @@ func Execute(cfg *config.Config, binFilter string, verbose bool) error {
 
 	apiDuration := time.Since(apiStart)
 
-	displayTickets(tickets)
+	displayTickets(tickets, verbose)
 
 	if verbose {
 		fmt.Fprintf(os.Stderr, "API request time: %.3fs\n", apiDuration.Seconds())
@@ -56,22 +56,22 @@ func Execute(cfg *config.Config, binFilter string, verbose bool) error {
 }
 
 // displayTickets formats and displays tickets to stdout
-func displayTickets(tickets []models.Ticket) {
-	output := formatTicketsWithCheckoutIndicator(tickets)
+func displayTickets(tickets []models.Ticket, verbose bool) {
+	output := formatTicketsWithCheckoutIndicator(tickets, verbose)
 	fmt.Print(output)
 }
 
 // formatTicketsWithCheckoutIndicator formats tickets and adds indicator for checked-out ticket
-func formatTicketsWithCheckoutIndicator(tickets []models.Ticket) string {
+func formatTicketsWithCheckoutIndicator(tickets []models.Ticket, verbose bool) string {
 	// Load current checkout state
 	checkoutState, err := state.LoadCheckout()
 	if err != nil {
 		// No checkout or error loading - just format normally
-		return formatter.FormatTickets(tickets)
+		return formatTicketsWithVerbosity(tickets, verbose)
 	}
 
-	// Format tickets normally
-	output := formatter.FormatTickets(tickets)
+	// Format tickets based on verbosity
+	output := formatTicketsWithVerbosity(tickets, verbose)
 
 	// Add indicator to checked-out ticket
 	if checkoutState != nil {
@@ -87,4 +87,12 @@ func formatTicketsWithCheckoutIndicator(tickets []models.Ticket) string {
 	}
 
 	return output
+}
+
+// formatTicketsWithVerbosity formats tickets using minimal or verbose mode
+func formatTicketsWithVerbosity(tickets []models.Ticket, verbose bool) string {
+	if verbose {
+		return formatter.FormatTickets(tickets)
+	}
+	return formatter.FormatTicketsMinimal(tickets)
 }

@@ -75,7 +75,7 @@ user_email: test@example.com
 	}
 
 	// Format tickets with checkout indicator
-	output := formatTicketsWithCheckoutIndicator(tickets)
+	output := formatTicketsWithCheckoutIndicator(tickets, true)
 
 	// Verify visual indicator appears for checked-out ticket
 	if !strings.Contains(output, "← CHECKED OUT") && !strings.Contains(output, "CHECKED OUT") {
@@ -151,7 +151,7 @@ func TestIndicatorIsVisuallySeparated(t *testing.T) {
 		},
 	}
 
-	output := formatTicketsWithCheckoutIndicator(tickets)
+	output := formatTicketsWithCheckoutIndicator(tickets, true)
 
 	// Verify indicator is right-aligned or clearly separated
 	// The indicator should not interfere with reading ticket information
@@ -195,7 +195,7 @@ func TestNoIndicatorWhenNoCheckout(t *testing.T) {
 		},
 	}
 
-	output := formatTicketsWithCheckoutIndicator(tickets)
+	output := formatTicketsWithCheckoutIndicator(tickets, true)
 
 	// Verify no indicator appears
 	if strings.Contains(output, "CHECKED OUT") {
@@ -253,7 +253,7 @@ func TestIndicatorDoesNotAffectOtherTickets(t *testing.T) {
 		},
 	}
 
-	output := formatTicketsWithCheckoutIndicator(tickets)
+	output := formatTicketsWithCheckoutIndicator(tickets, true)
 	lines := strings.Split(output, "\n")
 
 	indicatorCount := 0

@@ -67,7 +67,7 @@ user_email: test@example.com
 	}
 
 	// Format filtered tickets with indicator
-	output := formatTicketsWithCheckoutIndicator(ticketsInDoingBin)
+	output := formatTicketsWithCheckoutIndicator(ticketsInDoingBin, true)
 
 	// Verify indicator appears for checked-out ticket in filtered list
 	if !strings.Contains(output, "CHECKED OUT") {
@@ -136,7 +136,7 @@ func TestNoIndicatorWhenCheckedOutTicketNotInFilter(t *testing.T) {
 	}
 
 	// Format filtered tickets
-	output := formatTicketsWithCheckoutIndicator(ticketsInToDoBin)
+	output := formatTicketsWithCheckoutIndicator(ticketsInToDoBin, true)
 
 	// Verify NO indicator appears (checked-out ticket is not in this bin)
 	if strings.Contains(output, "CHECKED OUT") {
@@ -189,11 +189,11 @@ func TestIndicatorConsistentBetweenFullAndFiltered(t *testing.T) {
 	}
 
 	// Format full list
-	fullOutput := formatTicketsWithCheckoutIndicator(tickets)
+	fullOutput := formatTicketsWithCheckoutIndicator(tickets, true)
 
 	// Format filtered list (only tickets in Doing bin)
 	filteredTickets := []models.Ticket{tickets[0]}
-	filteredOutput := formatTicketsWithCheckoutIndicator(filteredTickets)
+	filteredOutput := formatTicketsWithCheckoutIndicator(filteredTickets, true)
 
 	// Extract indicator text from both outputs
 	fullIndicator := extractIndicatorText(fullOutput)
@@ -252,7 +252,7 @@ func TestFilteredListNoErrorWhenCheckedOutTicketNotPresent(t *testing.T) {
 	}
 
 	// Should not panic or error
-	output := formatTicketsWithCheckoutIndicator(tickets)
+	output := formatTicketsWithCheckoutIndicator(tickets, true)
 
 	// Verify output is produced
 	if output == "" {
