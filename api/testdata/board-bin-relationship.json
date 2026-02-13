@@ -1,0 +1,49 @@
+{
+  "uniqueness_analysis": {
+    "total_bins": 22,
+    "unique_bin_ids": [
+      "s48y7HnA8y48J7GFV",
+      "kX41z9DVeVthZGe5d",
+      "n5NOggxybrqxOtH3r",
+      "VUXh55WKQEPNdmwR5",
+      "xcOV9LDyB7jIaD7KK",
+      "yZukMyJIuih9LeFai",
+      "dL3SuElfvxZg9PyTV",
+      "6c6ErycDKrKLz1oa6",
+      "t7QwCrdddppV5y7as",
+      "cx7oRn0CK1SoAMn0x",
+      "JP7N9CvXw71ysgxPz",
+      "0HJjrL3tPMXPy43GA",
+      "ioXVVoKXO4iF5bbNE",
+      "KkAVc8VLQ5bp1U7sN",
+      "KfxMexsUVgAwBjEQc",
+      "50Ux6MQXvlMTeW8cP",
+      "GdDbs6LyozRZo3oEG",
+      "DSCWOjVO2t6x2wmNW",
+      "pMmWAdXpxHYjxMpBM",
+      "8l6427SLylzxn5JML",
+      "6mFYX8RJYrlCmcbI9",
+      "bCZqjbYKazRBnVBIJ"
+    ],
+    "unique_bin_names": [],
+    "are_bin_ids_unique": true,
+    "are_bin_names_unique": true
+  },
+  "hierarchy_analysis": {
+    "has_board_data": false,
+    "bins_are_globally_scoped": true,
+    "bins_are_board_scoped": false,
+    "tickets_have_multiple_boards": false,
+    "tickets_have_multiple_bins": false,
+    "hierarchy_description": "Bins exist at the organization level. Each ticket has one bin_id and bin_name. No board information is available in the ticket data, suggesting bins are globally scoped rather than board-scoped."
+  },
+  "identifier_strategy": "Use bin_id for filtering (globally unique identifier)",
+  "recommendations": [
+    "Bin IDs are sufficient for unique identification",
+    "Bin names may not be unique across the organization",
+    "Filter by bin_id for exact matching, bin_name for user-friendly filtering",
+    "No board data available, so board filtering not possible via this endpoint",
+    "Client-side filtering required for both board and bin filtering"
+  ],
+  "analysis_timestamp": "2026-02-13T23:05:14+01:00"
+}

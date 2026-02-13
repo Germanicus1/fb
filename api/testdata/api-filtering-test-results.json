@@ -1,0 +1,89 @@
+{
+  "baseline_ticket_count": 64,
+  "baseline_response_size": 37074,
+  "test_results": [
+    {
+      "parameter_name": "board",
+      "parameter_value": "test-board",
+      "request_url": "/ticket-search?users=YrjeFpU034lxeFz8a\u0026board=test-board",
+      "status_code": 200,
+      "response_size": 37074,
+      "ticket_count": 64,
+      "is_accepted": true,
+      "affects_results": false
+    },
+    {
+      "parameter_name": "bin",
+      "parameter_value": "test-bin",
+      "request_url": "/ticket-search?users=YrjeFpU034lxeFz8a\u0026bin=test-bin",
+      "status_code": 200,
+      "response_size": 37074,
+      "ticket_count": 64,
+      "is_accepted": true,
+      "affects_results": false
+    },
+    {
+      "parameter_name": "boardId",
+      "parameter_value": "test-board-id",
+      "request_url": "/ticket-search?users=YrjeFpU034lxeFz8a\u0026boardId=test-board-id",
+      "status_code": 200,
+      "response_size": 37074,
+      "ticket_count": 64,
+      "is_accepted": true,
+      "affects_results": false
+    },
+    {
+      "parameter_name": "binId",
+      "parameter_value": "test-bin-id",
+      "request_url": "/ticket-search?users=YrjeFpU034lxeFz8a\u0026binId=test-bin-id",
+      "status_code": 200,
+      "response_size": 37074,
+      "ticket_count": 64,
+      "is_accepted": true,
+      "affects_results": false
+    },
+    {
+      "parameter_name": "board_id",
+      "parameter_value": "test-board-id",
+      "request_url": "/ticket-search?users=YrjeFpU034lxeFz8a\u0026board_id=test-board-id",
+      "status_code": 200,
+      "response_size": 37074,
+      "ticket_count": 64,
+      "is_accepted": true,
+      "affects_results": false
+    },
+    {
+      "parameter_name": "bin_id",
+      "parameter_value": "test-bin-id",
+      "request_url": "/ticket-search?users=YrjeFpU034lxeFz8a\u0026bin_id=test-bin-id",
+      "status_code": 200,
+      "response_size": 37074,
+      "ticket_count": 64,
+      "is_accepted": true,
+      "affects_results": false
+    },
+    {
+      "parameter_name": "boardName",
+      "parameter_value": "test-board-name",
+      "request_url": "/ticket-search?users=YrjeFpU034lxeFz8a\u0026boardName=test-board-name",
+      "status_code": 200,
+      "response_size": 37074,
+      "ticket_count": 64,
+      "is_accepted": true,
+      "affects_results": false
+    },
+    {
+      "parameter_name": "binName",
+      "parameter_value": "test-bin-name",
+      "request_url": "/ticket-search?users=YrjeFpU034lxeFz8a\u0026binName=test-bin-name",
+      "status_code": 200,
+      "response_size": 37074,
+      "ticket_count": 64,
+      "is_accepted": true,
+      "affects_results": false
+    }
+  ],
+  "supports_server_side_filtering": false,
+  "conclusion": "Server-side filtering is NOT supported. All tested parameters either return errors or do not affect results. Client-side filtering is required.",
+  "test_timestamp": "2026-02-13T23:05:12+01:00"
+}

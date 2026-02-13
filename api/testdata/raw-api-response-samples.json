@@ -1,0 +1,25 @@
+[
+  {
+    "_id": "NKZcm7zhaaafKa50D",
+    "assigned_ids": [
+      "YrjeFpU034lxeFz8a"
+    ],
+    "bin_id": "GdDbs6LyozRZo3oEG",
+    "description": "This includes Carla Krieger. My contacts are higher up in the food chain, so I try them directly.",
+    "name": "eDreams - General training",
+    "order": 260046848,
+    "ticketType_id": "v5Qeyje4KLZ4Z96p7",
+    "updatedAt": "2026-02-13T17:54:36.525Z"
+  },
+  {
+    "_id": "XFRP73vY1VTz8Y1X1",
+    "assigned_ids": [
+      "YrjeFpU034lxeFz8a"
+    ],
+    "bin_id": "s48y7HnA8y48J7GFV",
+    "name": "Marco Re",
+    "order": 134217628,
+    "ticketType_id": "v5Qeyje4KLZ4Z96p7",
+    "updatedAt": "2026-02-13T17:22:26.156Z"
+  }
+]
