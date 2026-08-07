@@ -28,6 +28,9 @@ go.work
 *~
 .claude/
 
+# macOS
+.DS_Store
+
 # Config files (should not be committed)
 .fb/
 config.yaml
