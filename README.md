@@ -385,9 +385,9 @@ Use a YAML validator if needed: https://www.yamllint.com/
 
 ## Version
 
-Current version: 2.0.0
+Current version: 1.3.0
 
-### What's New in 2.0
+### What's New in 1.3
 
 - **Ticket Checkout Workflow**: Check out tickets and add multiple comments quickly (80% time savings)
 - **Bin Filtering**: Filter tickets by bin name/ID
