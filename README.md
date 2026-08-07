@@ -155,8 +155,6 @@ fb --comment --bin "In Progress"
 
 ```bash
 fb --version
-# or
-fb -v
 ```
 
 ### Show Help
@@ -171,6 +169,8 @@ fb -h
 
 ```bash
 fb --verbose
+# or
+fb -v
 # or
 fb --debug
 ```
