@@ -158,18 +158,13 @@ func handleCreateSubcommand() error {
 	if err != nil {
 		return err
 	}
-	isTerminal := false
-	if fi, statErr := os.Stdin.Stat(); statErr == nil {
-		isTerminal = fi.Mode()&os.ModeCharDevice != 0
-	}
-
-	err = commands.ExecuteCreate(commands.CreateDeps{
+	err =commands.ExecuteCreate(commands.CreateDeps{
 		Client:           svc.GetClient(),
 		UserEmail:        cfg.UserEmail,
 		Stdin:            os.Stdin,
 		Stdout:           os.Stdout,
 		Stderr:           os.Stderr,
-		IsTerminal:       isTerminal,
+		IsTerminal:       isTerminal(os.Stdin),
 		ConfigTicketType: cfg.TicketType,
 	}, commands.CreateOptions{Title: strings.Join(positional, " "), Bin: *binFlag, Verbose: *verbose, Description: *descFlag, Assign: assign, Type: *typeFlag, Checkout: *checkoutFlag, Force: *forceFlag})
 	if err != nil {
