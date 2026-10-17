@@ -28,6 +28,7 @@ type CreateDeps struct {
 	UserEmail  string
 	Stdin      io.Reader
 	Stdout     io.Writer
+	Stderr     io.Writer // warnings; nil discards
 	IsTerminal bool
 
 	// ConfigTicketType is the optional `ticket_type` config key.
@@ -138,6 +139,8 @@ func ExecuteCreate(d CreateDeps, o CreateOptions) error {
 	if o.Verbose {
 		if t, err := d.Client.GetTicket(id); err == nil {
 			fmt.Fprint(d.Stdout, "\n"+formatter.FormatTicket(*t))
+		} else if d.Stderr != nil {
+			fmt.Fprintf(d.Stderr, "Warning: could not fetch created ticket: %v\n", err)
 		}
 	}
 

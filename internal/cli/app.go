@@ -168,6 +168,7 @@ func handleCreateSubcommand() error {
 		UserEmail:        cfg.UserEmail,
 		Stdin:            os.Stdin,
 		Stdout:           os.Stdout,
+		Stderr:           os.Stderr,
 		IsTerminal:       isTerminal,
 		ConfigTicketType: cfg.TicketType,
 	}, commands.CreateOptions{Title: strings.Join(positional, " "), Bin: *binFlag, Verbose: *verbose, Description: *descFlag, Assign: assign, Type: *typeFlag, Checkout: *checkoutFlag, Force: *forceFlag})

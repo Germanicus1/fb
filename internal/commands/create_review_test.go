@@ -42,6 +42,21 @@ func TestCreateInteractiveCheckoutRefusedBeforePrompting(t *testing.T) {
 	}
 }
 
+func TestCreateVerboseFetchFailureWarns(t *testing.T) {
+	f := newFakeFlowBoards(t)
+	f.GetTicketFault = true
+	r := f.runCreate(CreateOptions{Title: "T", Bin: "Doing", Verbose: true}, "", false, nil)
+	if r.Err != nil {
+		t.Fatalf("unexpected error: %v", r.Err)
+	}
+	if !strings.HasPrefix(r.Stdout, "✓ Created ") {
+		t.Errorf("stdout = %q", r.Stdout)
+	}
+	if !strings.HasPrefix(r.Stderr, "Warning: could not fetch created ticket: ") {
+		t.Errorf("stderr = %q", r.Stderr)
+	}
+}
+
 func TestCreateBinUnknown(t *testing.T) {
 	t.Run("unknown name fails before create", func(t *testing.T) {
 		f := newFakeFlowBoards(t)
