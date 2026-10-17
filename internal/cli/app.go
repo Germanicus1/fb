@@ -132,6 +132,7 @@ func handleCreateSubcommand() error {
 	binFlag := fs.String("bin", "", "Bin name or ID (default: bin context)")
 	checkoutFlag := fs.Bool("checkout", false, "Check out the new ticket")
 	forceFlag := fs.Bool("force", false, "Replace an existing checkout (with --checkout)")
+	verbose := fs.Bool("v", false, "Show the created ticket in detail")
 	// Go's flag package stops at the first positional; re-parse so flags may
 	// follow the title (fb create "T" --bin X).
 	var positional []string
@@ -164,7 +165,7 @@ func handleCreateSubcommand() error {
 		Stdin:      os.Stdin,
 		Stdout:     os.Stdout,
 		IsTerminal: isTerminal,
-	}, commands.CreateOptions{Title: strings.Join(positional, " "), Bin: *binFlag, Checkout: *checkoutFlag, Force: *forceFlag})
+	}, commands.CreateOptions{Title: strings.Join(positional, " "), Bin: *binFlag, Checkout: *checkoutFlag, Force: *forceFlag, Verbose: *verbose})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 	}

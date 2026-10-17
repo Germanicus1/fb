@@ -27,6 +27,12 @@ type fakeFlowBoards struct {
 	Bins        []models.Bin
 	TicketTypes []models.TicketType
 
+	// CreateFault simulates a failing create: "403" answers Access denied;
+	// "drop" closes the connection (a network error), after recording the
+	// ticket when CreateFaultPersists is set.
+	CreateFault         string
+	CreateFaultPersists bool
+
 	mu      sync.Mutex
 	Creates []models.CreateTicketPayload
 }
@@ -65,13 +71,43 @@ func (f *fakeFlowBoards) handle(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "bad json", 400)
 			return
 		}
-		f.mu.Lock()
-		f.Creates = append(f.Creates, p)
-		f.mu.Unlock()
+		switch f.CreateFault {
+		case "403":
+			http.Error(w, "Access denied", 403)
+			return
+		case "drop":
+			if f.CreateFaultPersists {
+				f.record(p)
+			}
+			if hj, ok := w.(http.Hijacker); ok {
+				if conn, _, err := hj.Hijack(); err == nil {
+					conn.Close()
+				}
+			}
+			return
+		}
+		f.record(p)
 		w.WriteHeader(204)
+	case r.Method == "GET" && strings.HasPrefix(r.URL.Path, "/tickets/"):
+		id := strings.TrimPrefix(r.URL.Path, "/tickets/")
+		f.mu.Lock()
+		defer f.mu.Unlock()
+		for _, p := range f.Creates {
+			if p.ID == id {
+				json.NewEncoder(w).Encode(models.Ticket{ID: p.ID, Name: p.Name, Description: p.Description, BinID: p.BinID, AssignedIDs: p.AssignedIDs})
+				return
+			}
+		}
+		http.NotFound(w, r)
 	default:
 		http.NotFound(w, r)
 	}
+}
+
+func (f *fakeFlowBoards) record(p models.CreateTicketPayload) {
+	f.mu.Lock()
+	f.Creates = append(f.Creates, p)
+	f.mu.Unlock()
 }
 
 // createRun is the result of invoking the create command through its seam.
