@@ -126,6 +126,24 @@ type BoardsResponse struct {
 	PageToken string  `json:"page-token,omitempty"`
 }
 
+// TicketType represents a Flow Boards ticket type
+type TicketType struct {
+	ID       string `json:"_id"`
+	Name     string `json:"name"`
+	Disabled bool   `json:"disabled,omitempty"`
+}
+
+// CreateTicketPayload is the body for creating a ticket.
+// AssignedIDs is always sent: a ticket without Assignees would not appear in listings.
+type CreateTicketPayload struct {
+	ID           string   `json:"_id"`
+	Name         string   `json:"name"`
+	TicketTypeID string   `json:"ticketType_id"`
+	BinID        string   `json:"bin_id"`
+	Description  string   `json:"description,omitempty"`
+	AssignedIDs  []string `json:"assigned_ids"`
+}
+
 // CommentPayload represents the data structure for posting a comment
 type CommentPayload struct {
 	ID       string `json:"_id"`
