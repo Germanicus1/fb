@@ -22,6 +22,7 @@ const (
 	httpMethodGET        = "GET"
 	headerAuthorization  = "Authorization"
 	headerContentType    = "Content-Type"
+	headerPageToken      = "page-token"
 	contentTypeJSON      = "application/json"
 	authorizationPrefix  = "bearer "
 	httpStatusOK         = 200
@@ -201,7 +202,7 @@ func (c *Client) GetBins() ([]models.Bin, error) {
 	for {
 		path := buildPaginatedPath("/bins", pageToken)
 
-		resp, err := c.doRequest(httpMethodGET, path, nil)
+		resp, headerToken, err := c.doPagedRequest(path)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get bins: %w", err)
 		}
@@ -209,6 +210,9 @@ func (c *Client) GetBins() ([]models.Bin, error) {
 		bins, nextToken, err := parseBinsPage(resp)
 		if err != nil {
 			return nil, err
+		}
+		if nextToken == "" {
+			nextToken = headerToken
 		}
 
 		allBins = append(allBins, bins...)
@@ -251,7 +255,7 @@ func (c *Client) GetBoards() ([]models.Board, error) {
 	for {
 		path := buildPaginatedPath("/boards", pageToken)
 
-		resp, err := c.doRequest(httpMethodGET, path, nil)
+		resp, headerToken, err := c.doPagedRequest(path)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get boards: %w", err)
 		}
@@ -259,6 +263,9 @@ func (c *Client) GetBoards() ([]models.Board, error) {
 		boards, nextToken, err := parseBoardsPage(resp)
 		if err != nil {
 			return nil, err
+		}
+		if nextToken == "" {
+			nextToken = headerToken
 		}
 
 		allBoards = append(allBoards, boards...)
@@ -297,27 +304,43 @@ func (c *Client) doRequest(method, path string, body io.Reader) ([]byte, error) 
 
 // doRequestWithoutBase makes an HTTP request with authentication without using the base URL
 func (c *Client) doRequestWithoutBase(method, fullURL string, body io.Reader) ([]byte, error) {
+	respBody, _, err := c.doRequestWithHeaders(method, fullURL, body)
+	return respBody, err
+}
+
+// doRequestWithHeaders makes an HTTP request and returns the response body and headers
+func (c *Client) doRequestWithHeaders(method, fullURL string, body io.Reader) ([]byte, http.Header, error) {
 	req, err := c.createRequest(method, fullURL, body)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	resp, err := c.executeRequest(req)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer resp.Body.Close()
 
 	respBody, err := readResponseBody(resp)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if err := checkStatusCode(resp.StatusCode, respBody); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return respBody, nil
+	return respBody, resp.Header, nil
+}
+
+// doPagedRequest fetches one page of a paginated endpoint, returning the body
+// and the page-token response header (the API's next-page cursor, empty on the last page)
+func (c *Client) doPagedRequest(path string) ([]byte, string, error) {
+	respBody, header, err := c.doRequestWithHeaders(httpMethodGET, c.baseURL+path, nil)
+	if err != nil {
+		return nil, "", err
+	}
+	return respBody, header.Get(headerPageToken), nil
 }
 
 // createRequest creates an HTTP request with authentication headers
