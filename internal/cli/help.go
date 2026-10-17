@@ -19,6 +19,7 @@ Usage:
   fb --comment              Add a comment to a ticket (interactive)
   fb checkout --bin "Bin"   Check out a ticket to work on
   fb checkout TICKET-ID     Check out a specific ticket by ID
+  fb create "Title" [--bin B]  Create a ticket assigned to you
   fb -c "message"           Quick comment on checked-out ticket
   fb -o                     View currently checked-out ticket
   fb clear                  Clear checked-out ticket

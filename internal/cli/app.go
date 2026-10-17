@@ -11,6 +11,7 @@ import (
 
 	"github.com/Germanicus1/fb/config"
 	"github.com/Germanicus1/fb/internal/commands"
+	"github.com/Germanicus1/fb/internal/service"
 )
 
 // Run is the main entry point for the CLI application
@@ -22,6 +23,8 @@ func Run(version string) error {
 			return handleCheckoutSubcommand()
 		case "clear":
 			return handleClearSubcommand()
+		case "create":
+			return handleCreateSubcommand()
 		}
 	}
 
@@ -120,6 +123,50 @@ func handleCheckoutSubcommand() error {
 
 	args := fs.Args()
 	return commands.ExecuteCheckout(args, *binFlag, *forceFlag)
+}
+
+// handleCreateSubcommand handles the create subcommand: it builds the real
+// dependencies and hands them to commands.ExecuteCreate.
+func handleCreateSubcommand() error {
+	fs := flag.NewFlagSet("create", flag.ExitOnError)
+	binFlag := fs.String("bin", "", "Bin name or ID (default: bin context)")
+	// Go's flag package stops at the first positional; re-parse so flags may
+	// follow the title (fb create "T" --bin X).
+	var positional []string
+	rest := os.Args[2:]
+	for {
+		fs.Parse(rest)
+		if fs.NArg() == 0 {
+			break
+		}
+		positional = append(positional, fs.Arg(0))
+		rest = fs.Args()[1:]
+	}
+
+	cfg, err := loadConfiguration()
+	if err != nil {
+		return err
+	}
+	svc, err := service.NewTicketService(cfg)
+	if err != nil {
+		return err
+	}
+	isTerminal := false
+	if fi, statErr := os.Stdin.Stat(); statErr == nil {
+		isTerminal = fi.Mode()&os.ModeCharDevice != 0
+	}
+
+	err = commands.ExecuteCreate(commands.CreateDeps{
+		Client:     svc.GetClient(),
+		UserEmail:  cfg.UserEmail,
+		Stdin:      os.Stdin,
+		Stdout:     os.Stdout,
+		IsTerminal: isTerminal,
+	}, commands.CreateOptions{Title: strings.Join(positional, " "), Bin: *binFlag})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+	}
+	return err
 }
 
 // handleClearSubcommand handles the clear subcommand
