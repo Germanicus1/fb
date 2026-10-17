@@ -34,7 +34,7 @@ func Run(version string) error {
 		if err == flag.ErrHelp {
 			return nil
 		}
-		return fmt.Errorf("error parsing flags: %w", err)
+		return errReported{fmt.Errorf("error parsing flags: %w", err)}
 	}
 
 	// Handle version flag
@@ -158,7 +158,7 @@ func handleCreateSubcommand() error {
 	if err != nil {
 		return err
 	}
-	err = commands.ExecuteCreate(commands.CreateDeps{
+	return commands.ExecuteCreate(commands.CreateDeps{
 		Client:           svc.GetClient(),
 		UserEmail:        cfg.UserEmail,
 		Stdin:            os.Stdin,
@@ -167,10 +167,6 @@ func handleCreateSubcommand() error {
 		IsTerminal:       isTerminal(os.Stdin),
 		ConfigTicketType: cfg.TicketType,
 	}, commands.CreateOptions{Title: strings.Join(positional, " "), Bin: *binFlag, Verbose: *verbose, Description: *descFlag, Assign: assign, Type: *typeFlag, Checkout: *checkoutFlag, Force: *forceFlag})
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-	}
-	return err
 }
 
 // stringList is a repeatable string flag.
