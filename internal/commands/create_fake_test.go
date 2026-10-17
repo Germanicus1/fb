@@ -29,6 +29,8 @@ type fakeFlowBoards struct {
 
 	mu      sync.Mutex
 	Creates []models.CreateTicketPayload
+	// LastBody is the raw JSON of the latest create POST.
+	LastBody string
 }
 
 func newFakeFlowBoards(t *testing.T) *fakeFlowBoards {
@@ -67,6 +69,7 @@ func (f *fakeFlowBoards) handle(w http.ResponseWriter, r *http.Request) {
 		}
 		f.mu.Lock()
 		f.Creates = append(f.Creates, p)
+		f.LastBody = string(body)
 		f.mu.Unlock()
 		w.WriteHeader(204)
 	default:

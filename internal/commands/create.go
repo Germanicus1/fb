@@ -29,6 +29,9 @@ type CreateDeps struct {
 type CreateOptions struct {
 	Title string
 	Bin   string // --bin: name or id
+
+	// Description is -d: text sent verbatim, or "-" to read all of stdin.
+	Description string
 }
 
 // ExecuteCreate creates a Ticket. All validation happens before the single
@@ -58,6 +61,15 @@ func ExecuteCreate(d CreateDeps, o CreateOptions) error {
 		return fmt.Errorf("failed to get user information: %w", err)
 	}
 
+	description := o.Description
+	if description == "-" {
+		b, readErr := io.ReadAll(d.Stdin)
+		if readErr != nil {
+			return fmt.Errorf("failed to read description from stdin: %w", readErr)
+		}
+		description = string(b)
+	}
+
 	// 7. create
 	id := api.GenerateID()
 	if err := d.Client.CreateTicket(models.CreateTicketPayload{
@@ -65,6 +77,7 @@ func ExecuteCreate(d CreateDeps, o CreateOptions) error {
 		Name:         title,
 		TicketTypeID: typeID,
 		BinID:        binID,
+		Description:  description,
 		AssignedIDs:  []string{me.ID},
 	}); err != nil {
 		return err
