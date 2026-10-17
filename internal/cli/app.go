@@ -130,6 +130,8 @@ func handleCheckoutSubcommand() error {
 func handleCreateSubcommand() error {
 	fs := flag.NewFlagSet("create", flag.ExitOnError)
 	binFlag := fs.String("bin", "", "Bin name or ID (default: bin context)")
+	checkoutFlag := fs.Bool("checkout", false, "Check out the new ticket")
+	forceFlag := fs.Bool("force", false, "Replace an existing checkout (with --checkout)")
 	verbose := fs.Bool("v", false, "Show the created ticket in detail")
 	descFlag := fs.String("d", "", "Description (use - to read stdin)")
 	var assign stringList
@@ -168,7 +170,7 @@ func handleCreateSubcommand() error {
 		Stdout:           os.Stdout,
 		IsTerminal:       isTerminal,
 		ConfigTicketType: cfg.TicketType,
-	}, commands.CreateOptions{Title: strings.Join(positional, " "), Bin: *binFlag, Verbose: *verbose, Description: *descFlag, Assign: assign, Type: *typeFlag})
+	}, commands.CreateOptions{Title: strings.Join(positional, " "), Bin: *binFlag, Verbose: *verbose, Description: *descFlag, Assign: assign, Type: *typeFlag, Checkout: *checkoutFlag, Force: *forceFlag})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 	}

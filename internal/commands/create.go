@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/Germanicus1/fb/api"
 	"github.com/Germanicus1/fb/formatter"
@@ -37,7 +38,9 @@ type CreateOptions struct {
 	Title string
 	Bin   string // --bin: name or id
 
-	Verbose bool // -v: also print the created ticket
+	Checkout bool // --checkout: make the new ticket the Checkout
+	Force    bool // --force: replace an existing Checkout
+	Verbose  bool // -v: also print the created ticket
 	// Description is -d: text sent verbatim, or "-" to read all of stdin.
 	Description string
 	Assign      []string // --assign emails (repeatable); replaces me
@@ -51,6 +54,13 @@ func ExecuteCreate(d CreateDeps, o CreateOptions) error {
 	title := strings.TrimSpace(o.Title)
 	if title == "" {
 		return fmt.Errorf("title required")
+	}
+
+	// 3. Checkout precondition
+	if o.Checkout && !o.Force {
+		if existing, err := state.LoadCheckout(); err == nil {
+			return fmt.Errorf("ticket already checked out: %s\nUse 'fb clear' or 'fb checkout --force'", existing.TicketName)
+		}
 	}
 
 	// 4. bin resolution
@@ -107,9 +117,26 @@ func ExecuteCreate(d CreateDeps, o CreateOptions) error {
 
 	// 9. confirmation
 	fmt.Fprintf(d.Stdout, "✓ Created %s - %s  [%s]\n", id, title, binName)
+
 	if o.Verbose {
 		if t, err := d.Client.GetTicket(id); err == nil {
 			fmt.Fprint(d.Stdout, "\n"+formatter.FormatTicket(*t))
+		}
+	}
+
+	// 8. optional Checkout and Bin context save (after the ticket exists)
+	if o.Checkout {
+		if err := state.SaveCheckout(&state.CheckoutState{
+			TicketID:     id,
+			TicketName:   title,
+			BinID:        binID,
+			BinName:      binName,
+			CheckedOutAt: time.Now().Format(time.RFC3339),
+		}); err != nil {
+			return fmt.Errorf("ticket created but saving checkout failed: %w", err)
+		}
+		if err := state.SaveBinContext(binID, binName); err != nil {
+			return fmt.Errorf("ticket created but saving bin context failed: %w", err)
 		}
 	}
 	return nil
