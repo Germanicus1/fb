@@ -485,3 +485,120 @@ func TestBackwardsCompatibilityBoards(t *testing.T) {
 		}
 	})
 }
+
+// TestPageTokenHeaderPagination tests pagination as the live API does it:
+// each page is a plain JSON array, and the next-page cursor is sent in a
+// `page-token` response header rather than in the body.
+func TestPageTokenHeaderPagination(t *testing.T) {
+	// headerPagedServer serves pages of plain arrays, linking them via the page-token header
+	headerPagedServer := func(t *testing.T, path string, pages map[string]string, next map[string]string, requestCount *int) *httptest.Server {
+		return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path != path {
+				t.Errorf("Expected path %s, got %s", path, r.URL.Path)
+			}
+			*requestCount++
+			pageToken := r.URL.Query().Get("page-token")
+			page, ok := pages[pageToken]
+			if !ok {
+				t.Errorf("Unexpected page-token: %s", pageToken)
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			if token := next[pageToken]; token != "" {
+				w.Header().Set("page-token", token)
+			}
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(page))
+		}))
+	}
+
+	t.Run("Given bins split across pages by page-token header When fetching bins Then return bins from every page", func(t *testing.T) {
+		// Arrange
+		requestCount := 0
+		server := headerPagedServer(t, "/bins",
+			map[string]string{
+				"":    `[{"_id": "bin1", "name": "Bin One"}, {"_id": "bin2", "name": "Bin Two"}]`,
+				"500": `[{"_id": "bin3", "name": "peter.backlog"}]`,
+			},
+			map[string]string{"": "500"},
+			&requestCount)
+		defer server.Close()
+
+		client := NewClient("test-key")
+		client.baseURL = server.URL
+
+		// Act
+		bins, err := client.GetBins()
+
+		// Assert
+		if err != nil {
+			t.Fatalf("Expected no error, got %v", err)
+		}
+		if requestCount != 2 {
+			t.Errorf("Expected 2 API requests, got %d", requestCount)
+		}
+		if len(bins) != 3 {
+			t.Fatalf("Expected 3 bins total, got %d", len(bins))
+		}
+		if bins[2].Name != "peter.backlog" {
+			t.Errorf("Expected last bin to be peter.backlog, got %s", bins[2].Name)
+		}
+	})
+
+	t.Run("Given a bin only on the second header-paged page When looking it up by name Then it is found", func(t *testing.T) {
+		// Arrange
+		requestCount := 0
+		server := headerPagedServer(t, "/bins",
+			map[string]string{
+				"":    `[{"_id": "bin1", "name": "Bin One"}]`,
+				"500": `[{"_id": "gv4XfmStwwjEGs6ng", "name": "peter.backlog"}]`,
+			},
+			map[string]string{"": "500"},
+			&requestCount)
+		defer server.Close()
+
+		client := NewClient("test-key")
+		client.baseURL = server.URL
+
+		// Act
+		binID, err := client.LookupBinIDByName("peter.backlog")
+
+		// Assert
+		if err != nil {
+			t.Fatalf("Expected no error, got %v", err)
+		}
+		if binID != "gv4XfmStwwjEGs6ng" {
+			t.Errorf("Expected gv4XfmStwwjEGs6ng, got %s", binID)
+		}
+	})
+
+	t.Run("Given boards split across pages by page-token header When fetching boards Then return boards from every page", func(t *testing.T) {
+		// Arrange
+		requestCount := 0
+		server := headerPagedServer(t, "/boards",
+			map[string]string{
+				"":    `[{"_id": "board1", "name": "Board One"}]`,
+				"500": `[{"_id": "board2", "name": "Board Two"}]`,
+			},
+			map[string]string{"": "500"},
+			&requestCount)
+		defer server.Close()
+
+		client := NewClient("test-key")
+		client.baseURL = server.URL
+
+		// Act
+		boards, err := client.GetBoards()
+
+		// Assert
+		if err != nil {
+			t.Fatalf("Expected no error, got %v", err)
+		}
+		if requestCount != 2 {
+			t.Errorf("Expected 2 API requests, got %d", requestCount)
+		}
+		if len(boards) != 2 {
+			t.Fatalf("Expected 2 boards total, got %d", len(boards))
+		}
+	})
+}
