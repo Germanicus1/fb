@@ -35,6 +35,15 @@ Flags:
   -o                        View current checkout status
   --verbose                 Enable verbose output with performance metrics
 
+Create Flags (fb create ["Title"] [flags]; no title at a terminal prompts):
+  -d <text|->               Description; - reads it from stdin
+  --bin <name or id>        Bin for the ticket (default: bin context, or picker)
+  --type <name or id>       Ticket type (default: ticket_type config, else General)
+  --assign <email>          Assignee, repeatable; replaces you as assignee
+  --checkout                Check out the new ticket
+  --force                   With --checkout, replace an existing checkout
+  -v                        Show the created ticket in detail
+
 Checkout Workflow:
   1. Check out a ticket:    fb checkout --bin "In Progress"
   2. Add quick comments:    fb -c "Started work"
