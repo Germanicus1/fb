@@ -226,23 +226,6 @@ func (c *Client) GetBins() ([]models.Bin, error) {
 	return allBins, nil
 }
 
-// LookupBinIDByName looks up a bin ID by name (case-insensitive)
-func (c *Client) LookupBinIDByName(binName string) (string, error) {
-	bins, err := c.GetBins()
-	if err != nil {
-		return "", err
-	}
-
-	lowerBinName := strings.ToLower(binName)
-	for _, bin := range bins {
-		if strings.ToLower(bin.Name) == lowerBinName {
-			return bin.ID, nil
-		}
-	}
-
-	return "", fmt.Errorf("bin not found: %s", binName)
-}
-
 // GetBoards retrieves all boards from the API
 func (c *Client) GetBoards() ([]models.Board, error) {
 	if err := c.requireBaseURL(); err != nil {

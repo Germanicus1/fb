@@ -1,25 +1,36 @@
 package service
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 	"unicode"
 
 	"github.com/Germanicus1/fb/api"
+	"github.com/Germanicus1/fb/models"
 )
 
-// ResolveBinFilter converts a bin name to a bin ID.
-// If the input is already a bin ID (alphanumeric only), it returns it unchanged.
-// Otherwise, it performs a case-insensitive lookup to find the matching bin ID.
-func ResolveBinFilter(client *api.Client, binFilter string) (string, error) {
-	if IsBinID(binFilter) {
-		return binFilter, nil
-	}
+var errBinNotFound = errors.New("bin not found")
 
-	binID, err := client.LookupBinIDByName(binFilter)
+// LookupBin finds a bin given by name or id in the bin list: an exact id
+// match, else a case-insensitive name match. A ref not in the list is
+// "bin not found", even if it looks like an id.
+func LookupBin(client *api.Client, ref string) (models.Bin, error) {
+	bins, err := client.GetBins()
 	if err != nil {
-		return "", fmt.Errorf("failed to find bin '%s': %w", binFilter, err)
+		return models.Bin{}, err
 	}
-	return binID, nil
+	for _, b := range bins {
+		if b.ID == ref {
+			return b, nil
+		}
+	}
+	for _, b := range bins {
+		if strings.EqualFold(b.Name, ref) {
+			return b, nil
+		}
+	}
+	return models.Bin{}, fmt.Errorf("failed to find bin '%s': %w: %s", ref, errBinNotFound, ref)
 }
 
 // IsBinID determines if a string is a bin ID based on its format.

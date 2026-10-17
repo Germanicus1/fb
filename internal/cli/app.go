@@ -158,7 +158,7 @@ func handleCreateSubcommand() error {
 	if err != nil {
 		return err
 	}
-	err =commands.ExecuteCreate(commands.CreateDeps{
+	err = commands.ExecuteCreate(commands.CreateDeps{
 		Client:           svc.GetClient(),
 		UserEmail:        cfg.UserEmail,
 		Stdin:            os.Stdin,

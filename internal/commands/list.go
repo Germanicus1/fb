@@ -33,10 +33,11 @@ func Execute(cfg *config.Config, binFilter string, verbose bool) error {
 	// Convert bin filter name to ID if needed
 	binID := ""
 	if binFilter != "" {
-		binID, err = service.ResolveBinFilter(ticketService.GetClient(), binFilter)
+		bin, err := service.LookupBin(ticketService.GetClient(), binFilter)
 		if err != nil {
 			return err
 		}
+		binID = bin.ID
 	}
 
 	tickets, err := ticketService.GetUserTicketsFiltered(user.ID, binID, "")

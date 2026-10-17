@@ -545,33 +545,6 @@ func TestPageTokenHeaderPagination(t *testing.T) {
 		}
 	})
 
-	t.Run("Given a bin only on the second header-paged page When looking it up by name Then it is found", func(t *testing.T) {
-		// Arrange
-		requestCount := 0
-		server := headerPagedServer(t, "/bins",
-			map[string]string{
-				"":    `[{"_id": "bin1", "name": "Bin One"}]`,
-				"500": `[{"_id": "gv4XfmStwwjEGs6ng", "name": "peter.backlog"}]`,
-			},
-			map[string]string{"": "500"},
-			&requestCount)
-		defer server.Close()
-
-		client := NewClient("test-key")
-		client.baseURL = server.URL
-
-		// Act
-		binID, err := client.LookupBinIDByName("peter.backlog")
-
-		// Assert
-		if err != nil {
-			t.Fatalf("Expected no error, got %v", err)
-		}
-		if binID != "gv4XfmStwwjEGs6ng" {
-			t.Errorf("Expected gv4XfmStwwjEGs6ng, got %s", binID)
-		}
-	})
-
 	t.Run("Given boards split across pages by page-token header When fetching boards Then return boards from every page", func(t *testing.T) {
 		// Arrange
 		requestCount := 0

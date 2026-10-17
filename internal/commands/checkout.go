@@ -56,10 +56,11 @@ func ExecuteBinCheckout(binName string, force bool) error {
 	}
 
 	// Resolve bin name to ID
-	binID, err := service.ResolveBinFilter(ticketService.GetClient(), binName)
+	bin, err := service.LookupBin(ticketService.GetClient(), binName)
 	if err != nil {
 		return err
 	}
+	binID := bin.ID
 
 	// Fetch tickets in this bin
 	tickets, err := ticketService.GetUserTicketsFiltered(user.ID, binID, "")

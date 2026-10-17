@@ -33,10 +33,11 @@ func ExecuteInteractiveWithOutput(output io.Writer, binFilter string, cfg *confi
 	// Resolve bin filter if provided
 	binID := ""
 	if binFilter != "" {
-		binID, err = service.ResolveBinFilter(ticketService.GetClient(), binFilter)
+		bin, err := service.LookupBin(ticketService.GetClient(), binFilter)
 		if err != nil {
 			return err
 		}
+		binID = bin.ID
 	}
 
 	// Fetch tickets with optional bin filter

@@ -32,7 +32,8 @@ fb/
 │   │   ├── ticket_service.go   # Ticket operations
 │   │   ├── comment_service.go  # Comment operations
 │   │   ├── bin_service.go      # Bin resolution
-│   │   └── *_test.go           # 4 test files
+│   │   ├── create_service.go   # Ticket creation
+│   │   └── *_test.go           # 1 test file
 │   │
 │   └── state/                   # State persistence
 │       ├── types.go            # State type definitions
@@ -129,7 +130,7 @@ ExecuteQuick(comment string) error
 **Key Files**:
 - `ticket_service.go`: Ticket CRUD operations
 - `comment_service.go`: Comment generation and posting
-- `bin_service.go`: Bin name/ID resolution
+- `bin_service.go`: Bin name/ID resolution (`LookupBin`)
 
 **Service Pattern**:
 ```go
