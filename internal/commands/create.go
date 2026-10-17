@@ -208,7 +208,8 @@ func resolveCreateAssignees(d CreateDeps, emails []string) ([]string, error) {
 	for _, e := range emails {
 		u, err := d.Client.GetCurrentUser(e)
 		if err != nil {
-			if strings.Contains(err.Error(), "status 404") {
+			var apiErr *api.APIError
+			if errors.As(err, &apiErr) && apiErr.StatusCode == http.StatusNotFound {
 				unknown = append(unknown, e)
 				continue
 			}
