@@ -1,25 +1,10 @@
 package commands
 
 import (
-	"bytes"
 	"strings"
 	"testing"
 
-	"github.com/Germanicus1/fb/api"
 )
-
-func (f *fakeFlowBoards) runCreateWithConfigType(opts CreateOptions, cfgType string) error {
-	f.t.Helper()
-	f.t.Setenv("HOME", f.t.TempDir())
-	var out bytes.Buffer
-	return ExecuteCreate(CreateDeps{
-		Client:           api.NewClientWithBaseURL("test-key", f.Server.URL),
-		UserEmail:        "me@example.com",
-		Stdin:            strings.NewReader(""),
-		Stdout:           &out,
-		ConfigTicketType: cfgType,
-	}, opts)
-}
 
 func TestCreateTicketType(t *testing.T) {
 	t.Run("--type by name case-insensitive", func(t *testing.T) {
@@ -38,7 +23,8 @@ func TestCreateTicketType(t *testing.T) {
 	})
 	t.Run("config ticket_type used without flag", func(t *testing.T) {
 		f := newFakeFlowBoards(t)
-		if err := f.runCreateWithConfigType(CreateOptions{Title: "T", Bin: "binDoing1"}, "Bug"); err != nil {
+		f.ConfigTicketType = "Bug"
+		if err := f.runCreate(CreateOptions{Title: "T", Bin: "binDoing1"}, "", false, nil).Err; err != nil {
 			t.Fatal(err)
 		}
 		if f.Creates[0].TicketTypeID != "typeBug" {
@@ -47,7 +33,8 @@ func TestCreateTicketType(t *testing.T) {
 	})
 	t.Run("--type overrides config", func(t *testing.T) {
 		f := newFakeFlowBoards(t)
-		if err := f.runCreateWithConfigType(CreateOptions{Title: "T", Bin: "binDoing1", Type: "General"}, "Bug"); err != nil {
+		f.ConfigTicketType = "Bug"
+		if err := f.runCreate(CreateOptions{Title: "T", Bin: "binDoing1", Type: "General"}, "", false, nil).Err; err != nil {
 			t.Fatal(err)
 		}
 		if f.Creates[0].TicketTypeID != "typeGeneral" {

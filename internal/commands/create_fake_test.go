@@ -28,6 +28,8 @@ type fakeFlowBoards struct {
 	UserPaths   []string          // escaped paths of user lookups
 	Bins        []models.Bin
 	TicketTypes []models.TicketType
+	// ConfigTicketType is passed to the command as the `ticket_type` config key.
+	ConfigTicketType string
 
 	// CreateFault simulates a failing create: "403" answers Access denied;
 	// "drop" closes the connection (a network error), after recording the
@@ -150,6 +152,8 @@ func (f *fakeFlowBoards) runCreate(opts CreateOptions, stdin string, isTerminal 
 		Stdin:      strings.NewReader(stdin),
 		Stdout:     &out,
 		IsTerminal: isTerminal,
+
+		ConfigTicketType: f.ConfigTicketType,
 	}, opts)
 	return createRun{Err: err, Stdout: out.String(), Home: home}
 }
