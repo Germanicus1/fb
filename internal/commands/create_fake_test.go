@@ -35,6 +35,8 @@ type fakeFlowBoards struct {
 
 	mu      sync.Mutex
 	Creates []models.CreateTicketPayload
+	// LastBody is the raw JSON of the latest create POST.
+	LastBody string
 }
 
 func newFakeFlowBoards(t *testing.T) *fakeFlowBoards {
@@ -77,7 +79,7 @@ func (f *fakeFlowBoards) handle(w http.ResponseWriter, r *http.Request) {
 			return
 		case "drop":
 			if f.CreateFaultPersists {
-				f.record(p)
+				f.record(p, string(body))
 			}
 			if hj, ok := w.(http.Hijacker); ok {
 				if conn, _, err := hj.Hijack(); err == nil {
@@ -86,7 +88,7 @@ func (f *fakeFlowBoards) handle(w http.ResponseWriter, r *http.Request) {
 			}
 			return
 		}
-		f.record(p)
+		f.record(p, string(body))
 		w.WriteHeader(204)
 	case r.Method == "GET" && strings.HasPrefix(r.URL.Path, "/tickets/"):
 		id := strings.TrimPrefix(r.URL.Path, "/tickets/")
@@ -104,9 +106,10 @@ func (f *fakeFlowBoards) handle(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (f *fakeFlowBoards) record(p models.CreateTicketPayload) {
+func (f *fakeFlowBoards) record(p models.CreateTicketPayload, body string) {
 	f.mu.Lock()
 	f.Creates = append(f.Creates, p)
+	f.LastBody = body
 	f.mu.Unlock()
 }
 
