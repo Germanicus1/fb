@@ -48,13 +48,13 @@ A command-line tool for viewing your assigned Flow Boards tickets directly in th
 ```bash
 git clone https://github.com/Germanicus1/fb.git
 cd fb
-go build -o fb cmd/fb/main.go
+make build      # or: go build -o fb ./cmd/fb
 ```
 
 ### Install Globally
 
 ```bash
-go install ./cmd/fb
+make install    # or: go install ./cmd/fb
 ```
 
 This installs the binary to `$GOPATH/bin` as `fb`. Ensure this directory is in your PATH.
@@ -239,7 +239,9 @@ The tool provides clear error messages for common issues:
 ### Run Tests
 
 ```bash
-go test ./...
+make test       # skips tests that call the live Flow Boards API
+make test-live  # runs everything, then restores api/testdata
+make help       # all targets
 ```
 
 ### Test Coverage
