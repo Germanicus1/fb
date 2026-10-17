@@ -1,6 +1,6 @@
 # Flow Boards CLI
 
-A command-line tool for viewing your assigned Flow Boards tickets directly in the terminal.
+A command-line tool for viewing, creating and commenting on your Flow Boards tickets directly in the terminal.
 
 ## Features
 
@@ -23,6 +23,14 @@ A command-line tool for viewing your assigned Flow Boards tickets directly in th
 - **Persistent state** across terminal sessions and reboots
 - **Force replace** checked-out tickets when needed
 - **Auto-recovery** from corrupted or invalid checkout states
+
+### Creating Tickets
+- **One-line create**: `fb create "Title"` makes a ticket assigned to you
+- **Interactive create**: `fb create` prompts for title, description and bin
+- **Bin picker** filters ~1000 bins as you type, defaulting to your bin context
+- **Ticket type, Assignees and description** via `--type`, `--assign` and `-d` (or `-d -` from stdin)
+- **Check out on create** with `--checkout`, ready for quick comments
+- **Validates everything first**, so a mistake never leaves a half-made ticket
 
 ### Commenting
 - Add comments to any ticket interactively
@@ -67,6 +75,7 @@ Create a configuration file at `~/.fb/config.yaml`:
 auth_key: "your-auth-key-here"
 org_id: "your-organization-id"
 user_email: "your.email@example.com"
+ticket_type: "General"   # optional
 ```
 
 ### Configuration Fields
@@ -74,6 +83,7 @@ user_email: "your.email@example.com"
 - **auth_key**: Your Flow Boards API authentication key
 - **org_id**: Your organization ID
 - **user_email**: Your email address (used to filter tickets)
+- **ticket_type** (optional): Default Ticket type for `fb create`, by name or ID. Defaults to `General`.
 
 The tool will automatically create the `~/.fb` directory on first run if it doesn't exist.
 
@@ -91,6 +101,8 @@ fb --bin "In Progress"
 # Filter by bin ID
 fb --bin "kX41z9DVeVthZGe5d"
 ```
+
+`--bin` takes a bin name (any case) or a bin ID, everywhere it appears. An unknown bin is an error.
 
 Shows all tickets assigned to you with:
 - Ticket ID and name
@@ -140,6 +152,34 @@ fb checkout yL4rjYNU5PMlu7K8B
 ```bash
 fb checkout --bin "Testing" --force
 ```
+
+### Create Tickets
+
+```bash
+# One-liner: create in your bin context, assigned to you
+fb create "Fix login bug" -d "Repro on Safari"
+
+# Choose the bin, Ticket type and Assignees
+fb create "Add dark mode" --bin "Backlog" --type Feature --assign alice@example.com --assign bob@example.com
+
+# Pipe in a description
+git log -5 --oneline | fb create "Investigate regression" -d -
+
+# Create and check out at once, then comment on it
+fb create "Spike: caching" --checkout
+fb -c "Started"
+
+# Interactive: prompts for title, description (end with an empty line) and bin
+fb create
+```
+
+How `fb create` picks things:
+- **Bin**: `--bin`, else your bin context, else the bin picker (at a terminal), else an error asking for `--bin`.
+- **Ticket type**: `--type`, else `ticket_type` in the config, else `General`. Disabled types are rejected.
+- **Assignees**: you, unless `--assign` is given; each `--assign` email replaces you.
+- **Checkout**: `--checkout` refuses if a ticket is already checked out; add `--force` to replace it. Only `--checkout` updates the bin context.
+
+Flags and the title can come in any order. With no title and no terminal (e.g. in a script), `fb create` fails with `title required` instead of prompting.
 
 ### Add Comments (Interactive)
 
@@ -225,8 +265,16 @@ $ fb "Fixed the Unicode validation issue"
 ✓ Comment added to: Fix login bug
 ```
 
+### Create Confirmation
+
+```bash
+$ fb create "Fix login bug" --bin "Backlog"
+✓ Created aB3dE5fG7hJ9kL1mN - Fix login bug  [Backlog]
+```
+
 ## Error Handling
 
+Errors are printed to stderr as `Error: <message>`, and every failure exits with status 1.
 The tool provides clear error messages for common issues:
 
 - **Missing configuration**: Displays setup instructions
@@ -381,13 +429,26 @@ Use a YAML validator if needed: https://www.yamllint.com/
 - The tool automatically recovers from corrupted `~/.fb/checkout.json`
 - If issues persist, delete `~/.fb/checkout.json` manually
 
+**"bin not found or no access" on `fb create`**
+- The bin ID doesn't exist or you can't write to it
+- Check the name or ID with `fb --list-bins`
+
 **Lost bin context**
 - If `fb checkout` (without arguments) fails, specify bin explicitly
 - Example: `fb checkout --bin "Doing"`
 
 ## Version
 
-Current version: 1.3.0
+Current version: 1.4.0
+
+### What's New in 1.4
+
+- **`fb create`**: Create tickets from the terminal, as a one-liner or interactively, with a filtering bin picker
+- **Ticket types and Assignees**: `--type`, the `ticket_type` config key, and repeatable `--assign <email>`
+- **Create and check out**: `fb create --checkout` makes the new ticket your checkout
+- **One-word bin names**: `--bin Backlog` now resolves by name everywhere; unknown bins are an error
+- **Visible errors**: failures print `Error: <message>` instead of exiting silently
+- **Makefile**: `make build`, `make test`, `make install` and friends
 
 ### What's New in 1.3
 
