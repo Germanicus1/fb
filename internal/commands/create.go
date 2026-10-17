@@ -1,11 +1,15 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/Germanicus1/fb/api"
+	"github.com/Germanicus1/fb/formatter"
 	"github.com/Germanicus1/fb/internal/service"
 	"github.com/Germanicus1/fb/internal/state"
 	"github.com/Germanicus1/fb/models"
@@ -29,6 +33,8 @@ type CreateDeps struct {
 type CreateOptions struct {
 	Title string
 	Bin   string // --bin: name or id
+
+	Verbose bool // -v: also print the created ticket
 }
 
 // ExecuteCreate creates a Ticket. All validation happens before the single
@@ -67,12 +73,37 @@ func ExecuteCreate(d CreateDeps, o CreateOptions) error {
 		BinID:        binID,
 		AssignedIDs:  []string{me.ID},
 	}); err != nil {
-		return err
+		var apiErr *api.APIError
+		var netErr *url.Error
+		switch {
+		case errors.As(err, &apiErr) && apiErr.StatusCode == http.StatusForbidden:
+			return fmt.Errorf("bin not found or no access: %s", binRef(o.Bin, binID))
+		case errors.As(err, &netErr):
+			// The request may have reached the server: check before reporting.
+			if _, getErr := d.Client.GetTicket(id); getErr != nil {
+				return err
+			}
+		default:
+			return err
+		}
 	}
 
 	// 9. confirmation
 	fmt.Fprintf(d.Stdout, "✓ Created %s - %s  [%s]\n", id, title, binName)
+	if o.Verbose {
+		if t, err := d.Client.GetTicket(id); err == nil {
+			fmt.Fprint(d.Stdout, "\n"+formatter.FormatTicket(*t))
+		}
+	}
 	return nil
+}
+
+// binRef is how the user referred to the bin, falling back to its id.
+func binRef(flag, id string) string {
+	if flag != "" {
+		return flag
+	}
+	return id
 }
 
 // resolveCreateBin returns the bin id and display name: --bin (name or id),

@@ -71,4 +71,50 @@ func TestCreate(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("403 on create is rewritten to bin not found or no access", func(t *testing.T) {
+		f := newFakeFlowBoards(t)
+		f.CreateFault = "403"
+		r := f.runCreate(CreateOptions{Title: "T", Bin: "binDoing1"}, "", false, nil)
+		if r.Err == nil || r.Err.Error() != "bin not found or no access: binDoing1" {
+			t.Errorf("err = %v", r.Err)
+		}
+	})
+
+	t.Run("network error but ticket exists is success", func(t *testing.T) {
+		f := newFakeFlowBoards(t)
+		f.CreateFault, f.CreateFaultPersists = "drop", true
+		r := f.runCreate(CreateOptions{Title: "T", Bin: "peter.backlog"}, "", false, nil)
+		if r.Err != nil {
+			t.Fatalf("unexpected error: %v", r.Err)
+		}
+		if !strings.HasPrefix(r.Stdout, "✓ Created ") {
+			t.Errorf("stdout = %q", r.Stdout)
+		}
+	})
+
+	t.Run("network error and ticket absent returns original error", func(t *testing.T) {
+		f := newFakeFlowBoards(t)
+		f.CreateFault = "drop"
+		r := f.runCreate(CreateOptions{Title: "T", Bin: "peter.backlog"}, "", false, nil)
+		if r.Err == nil || !strings.Contains(r.Err.Error(), "request failed") {
+			t.Errorf("err = %v", r.Err)
+		}
+		if r.Stdout != "" {
+			t.Errorf("stdout = %q", r.Stdout)
+		}
+	})
+
+	t.Run("-v prints the created ticket after the success line", func(t *testing.T) {
+		f := newFakeFlowBoards(t)
+		r := f.runCreate(CreateOptions{Title: "Verbose me", Bin: "peter.backlog", Verbose: true}, "", false, nil)
+		if r.Err != nil {
+			t.Fatalf("unexpected error: %v", r.Err)
+		}
+		id := f.Creates[0].ID
+		if !strings.HasPrefix(r.Stdout, "✓ Created "+id) || !strings.Contains(r.Stdout, "Ticket ID: "+id) ||
+			!strings.Contains(r.Stdout, "Ticket Name: Verbose me") {
+			t.Errorf("stdout = %q", r.Stdout)
+		}
+	})
 }
