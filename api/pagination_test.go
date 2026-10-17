@@ -103,11 +103,11 @@ func TestGetBinsPagination(t *testing.T) {
 
 		// Verify bins from all pages are present
 		expectedBins := map[string]string{
-			"bin1":           "Bin One",
-			"bin2":           "Bin Two",
+			"bin1":              "Bin One",
+			"bin2":              "Bin Two",
 			"cx7oRn0CK1SoAMn0x": "K+Dev.Doing",
-			"bin4":           "Bin Four",
-			"bin5":           "Bin Five",
+			"bin4":              "Bin Four",
+			"bin5":              "Bin Five",
 		}
 
 		for i, bin := range bins {

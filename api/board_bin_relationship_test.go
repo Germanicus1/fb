@@ -114,31 +114,31 @@ func TestBoardBinRelationship(t *testing.T) {
 
 // BinUniquenessAnalysis represents the analysis of bin uniqueness
 type BinUniquenessAnalysis struct {
-	TotalBins          int      `json:"total_bins"`
-	UniqueBinIDs       []string `json:"unique_bin_ids"`
-	UniqueBinNames     []string `json:"unique_bin_names"`
-	AreBinIDsUnique    bool     `json:"are_bin_ids_unique"`
-	AreBinNamesUnique  bool     `json:"are_bin_names_unique"`
-	DuplicateBinNames  []string `json:"duplicate_bin_names,omitempty"`
+	TotalBins         int      `json:"total_bins"`
+	UniqueBinIDs      []string `json:"unique_bin_ids"`
+	UniqueBinNames    []string `json:"unique_bin_names"`
+	AreBinIDsUnique   bool     `json:"are_bin_ids_unique"`
+	AreBinNamesUnique bool     `json:"are_bin_names_unique"`
+	DuplicateBinNames []string `json:"duplicate_bin_names,omitempty"`
 }
 
 // BoardBinHierarchyAnalysis represents the analysis of board-bin hierarchy
 type BoardBinHierarchyAnalysis struct {
-	HasBoardData           bool     `json:"has_board_data"`
-	BinsAreGloballyScoped  bool     `json:"bins_are_globally_scoped"`
-	BinsAreBoardScoped     bool     `json:"bins_are_board_scoped"`
-	TicketsHaveMultipleBoards bool  `json:"tickets_have_multiple_boards"`
-	TicketsHaveMultipleBins   bool  `json:"tickets_have_multiple_bins"`
-	HierarchyDescription   string   `json:"hierarchy_description"`
+	HasBoardData              bool   `json:"has_board_data"`
+	BinsAreGloballyScoped     bool   `json:"bins_are_globally_scoped"`
+	BinsAreBoardScoped        bool   `json:"bins_are_board_scoped"`
+	TicketsHaveMultipleBoards bool   `json:"tickets_have_multiple_boards"`
+	TicketsHaveMultipleBins   bool   `json:"tickets_have_multiple_bins"`
+	HierarchyDescription      string `json:"hierarchy_description"`
 }
 
 // BoardBinRelationshipFindings represents complete relationship analysis
 type BoardBinRelationshipFindings struct {
-	UniquenessAnalysis *BinUniquenessAnalysis        `json:"uniqueness_analysis"`
-	HierarchyAnalysis  *BoardBinHierarchyAnalysis    `json:"hierarchy_analysis"`
-	IdentifierStrategy string                        `json:"identifier_strategy"`
-	Recommendations    []string                      `json:"recommendations"`
-	AnalysisTimestamp  string                        `json:"analysis_timestamp"`
+	UniquenessAnalysis *BinUniquenessAnalysis     `json:"uniqueness_analysis"`
+	HierarchyAnalysis  *BoardBinHierarchyAnalysis `json:"hierarchy_analysis"`
+	IdentifierStrategy string                     `json:"identifier_strategy"`
+	Recommendations    []string                   `json:"recommendations"`
+	AnalysisTimestamp  string                     `json:"analysis_timestamp"`
 }
 
 // analyzeBinUniqueness analyzes whether bin IDs and names are unique
@@ -209,12 +209,12 @@ func analyzeBoardBinHierarchy(response []byte) *BoardBinHierarchyAnalysis {
 	}
 
 	return &BoardBinHierarchyAnalysis{
-		HasBoardData:          hasBoardData,
-		BinsAreGloballyScoped: !hasBoardData,
-		BinsAreBoardScoped:    hasBoardData,
+		HasBoardData:              hasBoardData,
+		BinsAreGloballyScoped:     !hasBoardData,
+		BinsAreBoardScoped:        hasBoardData,
 		TicketsHaveMultipleBoards: false,
 		TicketsHaveMultipleBins:   false,
-		HierarchyDescription:  description,
+		HierarchyDescription:      description,
 	}
 }
 

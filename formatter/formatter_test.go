@@ -300,6 +300,7 @@ func TestStory2_1_EmptyTicketList(t *testing.T) {
 		t.Errorf("Output should indicate no tickets, got: %s", output)
 	}
 }
+
 // Story 2.3 Acceptance Tests: Display Created and Updated Dates
 
 // TestStory2_3_DisplayCreatedDate verifies created date is displayed in YYYY-MM-DD format
@@ -443,6 +444,7 @@ func TestStory2_3_DateFormatConsistency(t *testing.T) {
 		}
 	}
 }
+
 // Story 2.4 Acceptance Tests: Display Due Date When Present
 
 // TestStory2_4_DisplayDueDateWhenPresent verifies due date is displayed when set

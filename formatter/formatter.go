@@ -10,9 +10,9 @@ import (
 const (
 	maxDescriptionLength        = 200
 	maxLineWidth                = 80
-	fieldIndent                 = "  "                        // 2 spaces for field labels
-	descriptionIndent           = "    "                      // 4 spaces for wrapped lines
-	emptyDescriptionPlaceholder = "(none)"                    // Placeholder for empty descriptions
+	fieldIndent                 = "  "     // 2 spaces for field labels
+	descriptionIndent           = "    "   // 4 spaces for wrapped lines
+	emptyDescriptionPlaceholder = "(none)" // Placeholder for empty descriptions
 	noTicketsMessage            = "No tickets assigned to you."
 	ticketCountHeaderFormat     = "Found %d ticket(s) assigned to you:\n\n"
 )
