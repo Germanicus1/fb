@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -80,7 +81,7 @@ func ExecuteCreate(d CreateDeps, o CreateOptions) error {
 	}
 
 	// 4. bin resolution
-	binID, binName, err := resolveCreateBin(d, o.Bin)
+	binID, binName, err := resolveCreateBin(d, in, interactive, o.Bin)
 	if err != nil {
 		return err
 	}
@@ -166,15 +167,32 @@ func binRef(flag, id string) string {
 	return id
 }
 
-// resolveCreateBin returns the bin id and display name: --bin (name or id),
-// otherwise the Bin context, otherwise an error naming --bin.
-func resolveCreateBin(d CreateDeps, binFlag string) (id, name string, err error) {
+// resolveCreateBin returns the bin id and display name: --bin (name or id);
+// else, in interactive mode, the picker with the Bin context as default; else
+// the Bin context; else the picker at a terminal; else an error naming --bin.
+func resolveCreateBin(d CreateDeps, in *bufio.Reader, interactive bool, binFlag string) (id, name string, err error) {
 	if binFlag == "" {
 		bc, loadErr := state.LoadBinContext()
-		if loadErr != nil || bc.BinID == "" {
+		hasCtx := loadErr == nil && bc.BinID != ""
+		if hasCtx && !interactive {
+			return bc.BinID, bc.BinName, nil
+		}
+		if !d.IsTerminal {
 			return "", "", fmt.Errorf("no bin specified: use --bin <name or id>")
 		}
-		return bc.BinID, bc.BinName, nil
+		var def *models.Bin
+		if hasCtx {
+			def = &models.Bin{ID: bc.BinID, Name: bc.BinName}
+		}
+		bins, listErr := d.Client.GetBins()
+		if listErr != nil {
+			return "", "", listErr
+		}
+		b, pickErr := pickBin(in, d.Stdout, bins, def)
+		if pickErr != nil {
+			return "", "", pickErr
+		}
+		return b.ID, b.Name, nil
 	}
 
 	id, err = service.ResolveBinFilter(d.Client, binFlag)
@@ -280,4 +298,82 @@ func promptDescription(in *bufio.Reader, out io.Writer) string {
 		}
 	}
 	return strings.Join(lines, "\n")
+}
+
+const maxPickList = 20
+
+// pickBin prompts for a bin until one is chosen. Empty input picks def (if
+// any); otherwise input filters bins by case-insensitive substring.
+func pickBin(in *bufio.Reader, out io.Writer, bins []models.Bin, def *models.Bin) (models.Bin, error) {
+	for {
+		if def != nil {
+			fmt.Fprintf(out, "Bin [%s]: ", def.Name)
+		} else {
+			fmt.Fprint(out, "Bin: ")
+		}
+		line, err := in.ReadString('\n')
+		input := strings.TrimSpace(line)
+		if input == "" {
+			if def != nil {
+				return *def, nil
+			}
+			if err != nil {
+				fmt.Fprintln(out)
+				return models.Bin{}, fmt.Errorf("no bin selected")
+			}
+			continue
+		}
+		var matches []models.Bin
+		lower := strings.ToLower(input)
+		for _, b := range bins {
+			if strings.Contains(strings.ToLower(b.Name), lower) {
+				matches = append(matches, b)
+			}
+		}
+		switch {
+		case len(matches) == 0:
+			fmt.Fprintf(out, "No bin matches %q.\n", input)
+		case len(matches) == 1:
+			fmt.Fprintf(out, "→ %s\n", matches[0].Name)
+			return matches[0], nil
+		case len(matches) > maxPickList:
+			fmt.Fprintf(out, "%d bins match %q — type more.\n", len(matches), input)
+		default:
+			if b, ok, nErr := numberedPick(in, out, matches); nErr != nil {
+				return models.Bin{}, nErr
+			} else if ok {
+				return b, nil
+			}
+		}
+		if err != nil {
+			return models.Bin{}, fmt.Errorf("no bin selected")
+		}
+	}
+}
+
+// numberedPick lists matches and reads a number. An invalid number re-prompts;
+// an empty line returns ok=false so the caller goes back to filtering.
+func numberedPick(in *bufio.Reader, out io.Writer, matches []models.Bin) (models.Bin, bool, error) {
+	for i, b := range matches {
+		fmt.Fprintf(out, "  %d) %s\n", i+1, b.Name)
+	}
+	for {
+		fmt.Fprintf(out, "Number (1-%d): ", len(matches))
+		line, err := in.ReadString('\n')
+		input := strings.TrimSpace(line)
+		if input == "" {
+			if err != nil {
+				return models.Bin{}, false, fmt.Errorf("no bin selected")
+			}
+			return models.Bin{}, false, nil
+		}
+		if n, convErr := strconv.Atoi(input); convErr == nil && n >= 1 && n <= len(matches) {
+			fmt.Fprintf(out, "→ %s\n", matches[n-1].Name)
+			return matches[n-1], true, nil
+		}
+		fmt.Fprintln(out, "Invalid number.")
+		if err != nil {
+			return models.Bin{}, false, fmt.Errorf("no bin selected")
+		}
+	}
 }
