@@ -16,6 +16,14 @@ _Avoid_: column, list, lane, stage, bucket
 A named collection of bins.
 _Avoid_: project, workspace, swimlane
 
+**Assignee**:
+A user a ticket is assigned to, identified in `fb` by email. A ticket may have several; `fb` only ever lists tickets where you are one.
+_Avoid_: owner, member, responsible
+
+**Ticket type**:
+The kind of a ticket (e.g. General, Bug, Feature), required for every ticket. Names are unique within an org; a type can be disabled, after which no new ticket may use it.
+_Avoid_: category, kind, template
+
 **Status**:
 A ticket's bin, rendered for display — its bin name, falling back to bin ID, then `Unknown`. Never a field of its own on a ticket.
 _Avoid_: state, stage
