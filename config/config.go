@@ -27,6 +27,8 @@ type Config struct {
 	AuthKey   string `yaml:"auth_key"`
 	OrgID     string `yaml:"org_id"`
 	UserEmail string `yaml:"user_email"`
+	// TicketType is the optional default Ticket type for `fb create`.
+	TicketType string `yaml:"ticket_type"`
 }
 
 // GetConfigPath returns the path to the config file
