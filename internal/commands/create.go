@@ -57,6 +57,14 @@ func ExecuteCreate(d CreateDeps, o CreateOptions) error {
 	if interactive && !d.IsTerminal {
 		return fmt.Errorf("title required")
 	}
+
+	// 3. Checkout precondition
+	if o.Checkout && !o.Force {
+		if existing, err := state.LoadCheckout(); err == nil {
+			return fmt.Errorf("ticket already checked out: %s\nUse 'fb clear' or 'fb checkout --force'", existing.TicketName)
+		}
+	}
+
 	if interactive {
 		t, err := promptTitle(in, d.Stdout)
 		if err != nil {
@@ -70,13 +78,6 @@ func ExecuteCreate(d CreateDeps, o CreateOptions) error {
 	title := strings.TrimSpace(o.Title)
 	if title == "" {
 		return fmt.Errorf("title required")
-	}
-
-	// 3. Checkout precondition
-	if o.Checkout && !o.Force {
-		if existing, err := state.LoadCheckout(); err == nil {
-			return fmt.Errorf("ticket already checked out: %s\nUse 'fb clear' or 'fb checkout --force'", existing.TicketName)
-		}
 	}
 
 	// 4. bin resolution

@@ -30,6 +30,18 @@ func TestCreateResponseReadErrorChecksTicket(t *testing.T) {
 	}
 }
 
+func TestCreateInteractiveCheckoutRefusedBeforePrompting(t *testing.T) {
+	f := newFakeFlowBoards(t)
+	r := f.runCreate(CreateOptions{Bin: "Doing", Checkout: true}, "Title\nbody\n\n", true,
+		func(h string) { writeCheckoutFile(t, h, "old", "Old ticket") })
+	if r.Err == nil || !strings.HasPrefix(r.Err.Error(), "ticket already checked out: Old ticket") {
+		t.Fatalf("err = %v", r.Err)
+	}
+	if strings.Contains(r.Stdout, "Title:") {
+		t.Errorf("prompted before refusing: %q", r.Stdout)
+	}
+}
+
 func TestCreateBinUnknown(t *testing.T) {
 	t.Run("unknown name fails before create", func(t *testing.T) {
 		f := newFakeFlowBoards(t)
