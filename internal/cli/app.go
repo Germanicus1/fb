@@ -130,6 +130,8 @@ func handleCheckoutSubcommand() error {
 func handleCreateSubcommand() error {
 	fs := flag.NewFlagSet("create", flag.ExitOnError)
 	binFlag := fs.String("bin", "", "Bin name or ID (default: bin context)")
+	var assign stringList
+	fs.Var(&assign, "assign", "Assignee email (repeatable; replaces me)")
 	// Go's flag package stops at the first positional; re-parse so flags may
 	// follow the title (fb create "T" --bin X).
 	var positional []string
@@ -162,12 +164,18 @@ func handleCreateSubcommand() error {
 		Stdin:      os.Stdin,
 		Stdout:     os.Stdout,
 		IsTerminal: isTerminal,
-	}, commands.CreateOptions{Title: strings.Join(positional, " "), Bin: *binFlag})
+	}, commands.CreateOptions{Title: strings.Join(positional, " "), Bin: *binFlag, Assign: assign})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 	}
 	return err
 }
+
+// stringList is a repeatable string flag.
+type stringList []string
+
+func (s *stringList) String() string     { return strings.Join(*s, ",") }
+func (s *stringList) Set(v string) error { *s = append(*s, v); return nil }
 
 // handleClearSubcommand handles the clear subcommand
 func handleClearSubcommand() error {

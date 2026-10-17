@@ -24,6 +24,8 @@ type fakeFlowBoards struct {
 	Server *httptest.Server
 
 	UserID      string
+	Users       map[string]string // email -> id; when set, other emails 404
+	UserPaths   []string          // escaped paths of user lookups
 	Bins        []models.Bin
 	TicketTypes []models.TicketType
 
@@ -53,7 +55,19 @@ func newFakeFlowBoards(t *testing.T) *fakeFlowBoards {
 func (f *fakeFlowBoards) handle(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case r.Method == "GET" && strings.HasPrefix(r.URL.Path, "/users/"):
-		json.NewEncoder(w).Encode(models.User{ID: f.UserID, Email: strings.TrimPrefix(r.URL.Path, "/users/")})
+		email := strings.TrimPrefix(r.URL.Path, "/users/")
+		f.mu.Lock()
+		f.UserPaths = append(f.UserPaths, r.URL.EscapedPath())
+		f.mu.Unlock()
+		id := f.UserID
+		if f.Users != nil {
+			var ok bool
+			if id, ok = f.Users[email]; !ok {
+				http.Error(w, `{"error":"not_found"}`, 404)
+				return
+			}
+		}
+		json.NewEncoder(w).Encode(models.User{ID: id, Email: email})
 	case r.Method == "GET" && r.URL.Path == "/bins":
 		json.NewEncoder(w).Encode(f.Bins)
 	case r.Method == "GET" && r.URL.Path == "/ticket-types":
