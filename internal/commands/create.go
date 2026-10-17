@@ -121,7 +121,7 @@ func ExecuteCreate(d CreateDeps, o CreateOptions) error {
 		var netErr *url.Error
 		switch {
 		case errors.As(err, &apiErr) && apiErr.StatusCode == http.StatusForbidden:
-			return fmt.Errorf("bin not found or no access: %s", binRef(o.Bin, binID))
+			return fmt.Errorf("bin not found or no access: %s", binName)
 		case errors.As(err, &netErr):
 			// The request may have reached the server: check before reporting.
 			if _, getErr := d.Client.GetTicket(id); getErr != nil {
@@ -159,14 +159,6 @@ func ExecuteCreate(d CreateDeps, o CreateOptions) error {
 	return nil
 }
 
-// binRef is how the user referred to the bin, falling back to its id.
-func binRef(flag, id string) string {
-	if flag != "" {
-		return flag
-	}
-	return id
-}
-
 // resolveCreateBin returns the bin id and display name: --bin (name or id);
 // else, in interactive mode, the picker with the Bin context as default; else
 // the Bin context; else the picker at a terminal; else an error naming --bin.
@@ -195,20 +187,11 @@ func resolveCreateBin(d CreateDeps, in *bufio.Reader, interactive bool, binFlag 
 		return b.ID, b.Name, nil
 	}
 
-	id, err = service.ResolveBinFilter(d.Client, binFlag)
+	b, err := service.ResolveBin(d.Client, binFlag)
 	if err != nil {
 		return "", "", err
 	}
-	name = binFlag
-	if bins, listErr := d.Client.GetBins(); listErr == nil {
-		for _, b := range bins {
-			if b.ID == id {
-				name = b.Name
-				break
-			}
-		}
-	}
-	return id, name, nil
+	return b.ID, b.Name, nil
 }
 
 // resolveCreateAssignees returns the Assignee user ids: the --assign emails
