@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 
 	"github.com/Germanicus1/fb/api"
 	"github.com/Germanicus1/fb/internal/service"
@@ -29,6 +30,9 @@ type CreateDeps struct {
 type CreateOptions struct {
 	Title string
 	Bin   string // --bin: name or id
+
+	Checkout bool // --checkout: make the new ticket the Checkout
+	Force    bool // --force: replace an existing Checkout
 }
 
 // ExecuteCreate creates a Ticket. All validation happens before the single
@@ -38,6 +42,13 @@ func ExecuteCreate(d CreateDeps, o CreateOptions) error {
 	title := strings.TrimSpace(o.Title)
 	if title == "" {
 		return fmt.Errorf("title required")
+	}
+
+	// 3. Checkout precondition
+	if o.Checkout && !o.Force {
+		if existing, err := state.LoadCheckout(); err == nil {
+			return fmt.Errorf("ticket already checked out: %s\nUse 'fb clear' or 'fb checkout --force'", existing.TicketName)
+		}
 	}
 
 	// 4. bin resolution
@@ -72,6 +83,22 @@ func ExecuteCreate(d CreateDeps, o CreateOptions) error {
 
 	// 9. confirmation
 	fmt.Fprintf(d.Stdout, "✓ Created %s - %s  [%s]\n", id, title, binName)
+
+	// 8. optional Checkout and Bin context save (after the ticket exists)
+	if o.Checkout {
+		if err := state.SaveCheckout(&state.CheckoutState{
+			TicketID:     id,
+			TicketName:   title,
+			BinID:        binID,
+			BinName:      binName,
+			CheckedOutAt: time.Now(),
+		}); err != nil {
+			return fmt.Errorf("ticket created but saving checkout failed: %w", err)
+		}
+		if err := state.SaveBinContext(binID, binName); err != nil {
+			return fmt.Errorf("ticket created but saving bin context failed: %w", err)
+		}
+	}
 	return nil
 }
 
