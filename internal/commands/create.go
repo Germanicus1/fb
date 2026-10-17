@@ -37,6 +37,7 @@ type CreateOptions struct {
 	Verbose bool // -v: also print the created ticket
 	// Description is -d: text sent verbatim, or "-" to read all of stdin.
 	Description string
+	Assign      []string // --assign emails (repeatable); replaces me
 }
 
 // ExecuteCreate creates a Ticket. All validation happens before the single
@@ -60,10 +61,10 @@ func ExecuteCreate(d CreateDeps, o CreateOptions) error {
 		return err
 	}
 
-	// 6. assignee resolution (me)
-	me, err := d.Client.GetCurrentUser(d.UserEmail)
+	// 6. assignee resolution (me unless --assign)
+	assignedIDs, err := resolveCreateAssignees(d, o.Assign)
 	if err != nil {
-		return fmt.Errorf("failed to get user information: %w", err)
+		return err
 	}
 
 	description := o.Description
@@ -83,7 +84,7 @@ func ExecuteCreate(d CreateDeps, o CreateOptions) error {
 		TicketTypeID: typeID,
 		BinID:        binID,
 		Description:  description,
-		AssignedIDs:  []string{me.ID},
+		AssignedIDs:  assignedIDs,
 	}); err != nil {
 		var apiErr *api.APIError
 		var netErr *url.Error
@@ -143,6 +144,35 @@ func resolveCreateBin(d CreateDeps, binFlag string) (id, name string, err error)
 		}
 	}
 	return id, name, nil
+}
+
+// resolveCreateAssignees returns the Assignee user ids: the --assign emails
+// (replacing me), or me when none given. Every unknown (404) email is
+// reported together.
+func resolveCreateAssignees(d CreateDeps, emails []string) ([]string, error) {
+	if len(emails) == 0 {
+		me, err := d.Client.GetCurrentUser(d.UserEmail)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get user information: %w", err)
+		}
+		return []string{me.ID}, nil
+	}
+	var ids, unknown []string
+	for _, e := range emails {
+		u, err := d.Client.GetCurrentUser(e)
+		if err != nil {
+			if strings.Contains(err.Error(), "status 404") {
+				unknown = append(unknown, e)
+				continue
+			}
+			return nil, fmt.Errorf("failed to look up %s: %w", e, err)
+		}
+		ids = append(ids, u.ID)
+	}
+	if len(unknown) > 0 {
+		return nil, fmt.Errorf("unknown assignee email(s): %s", strings.Join(unknown, ", "))
+	}
+	return ids, nil
 }
 
 // resolveCreateType resolves a Ticket type by name (case-insensitive) or id.
