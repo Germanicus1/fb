@@ -134,6 +134,7 @@ func handleCreateSubcommand() error {
 	descFlag := fs.String("d", "", "Description (use - to read stdin)")
 	var assign stringList
 	fs.Var(&assign, "assign", "Assignee email (repeatable; replaces me)")
+	typeFlag := fs.String("type", "", "Ticket type name or ID")
 	// Go's flag package stops at the first positional; re-parse so flags may
 	// follow the title (fb create "T" --bin X).
 	var positional []string
@@ -161,12 +162,13 @@ func handleCreateSubcommand() error {
 	}
 
 	err = commands.ExecuteCreate(commands.CreateDeps{
-		Client:     svc.GetClient(),
-		UserEmail:  cfg.UserEmail,
-		Stdin:      os.Stdin,
-		Stdout:     os.Stdout,
-		IsTerminal: isTerminal,
-	}, commands.CreateOptions{Title: strings.Join(positional, " "), Bin: *binFlag, Verbose: *verbose, Description: *descFlag, Assign: assign})
+		Client:           svc.GetClient(),
+		UserEmail:        cfg.UserEmail,
+		Stdin:            os.Stdin,
+		Stdout:           os.Stdout,
+		IsTerminal:       isTerminal,
+		ConfigTicketType: cfg.TicketType,
+	}, commands.CreateOptions{Title: strings.Join(positional, " "), Bin: *binFlag, Verbose: *verbose, Description: *descFlag, Assign: assign, Type: *typeFlag})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 	}

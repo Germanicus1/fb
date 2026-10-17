@@ -116,7 +116,7 @@ user_email: test@example.com
 	// Verify error message distinguishes "not assigned"
 	errMsg := err.Error()
 	if !strings.Contains(strings.ToLower(errMsg), "not assigned") &&
-	   !strings.Contains(strings.ToLower(errMsg), "not found") {
+		!strings.Contains(strings.ToLower(errMsg), "not found") {
 		t.Errorf("Expected error to mention 'not assigned' or 'not found', got: %s", errMsg)
 	}
 
@@ -132,16 +132,16 @@ user_email: test@example.com
 // Then error messages clearly explain the specific problem
 func TestValidationDistinguishesErrors(t *testing.T) {
 	testCases := []struct {
-		name           string
-		ticketID       string
-		ticket         *models.Ticket
-		expectedInMsg  string
+		name          string
+		ticketID      string
+		ticket        *models.Ticket
+		expectedInMsg string
 	}{
 		{
-			name:           "Ticket does not exist",
-			ticketID:       "TICKET-NONEXISTENT",
-			ticket:         nil,
-			expectedInMsg:  "not found",
+			name:          "Ticket does not exist",
+			ticketID:      "TICKET-NONEXISTENT",
+			ticket:        nil,
+			expectedInMsg: "not found",
 		},
 		{
 			name:     "Ticket exists but not assigned",

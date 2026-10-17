@@ -27,6 +27,9 @@ type CreateDeps struct {
 	Stdin      io.Reader
 	Stdout     io.Writer
 	IsTerminal bool
+
+	// ConfigTicketType is the optional `ticket_type` config key.
+	ConfigTicketType string
 }
 
 // CreateOptions are the parsed arguments and flags of `fb create`.
@@ -38,6 +41,7 @@ type CreateOptions struct {
 	// Description is -d: text sent verbatim, or "-" to read all of stdin.
 	Description string
 	Assign      []string // --assign emails (repeatable); replaces me
+	Type        string   // --type: Ticket type name or id
 }
 
 // ExecuteCreate creates a Ticket. All validation happens before the single
@@ -56,7 +60,7 @@ func ExecuteCreate(d CreateDeps, o CreateOptions) error {
 	}
 
 	// 5. type resolution
-	typeID, err := resolveCreateType(d.Client, defaultTicketType)
+	typeID, err := resolveCreateType(d.Client, firstNonEmpty(o.Type, d.ConfigTicketType, defaultTicketType))
 	if err != nil {
 		return err
 	}
@@ -183,8 +187,20 @@ func resolveCreateType(c *api.Client, want string) (string, error) {
 	}
 	for _, t := range types {
 		if t.ID == want || strings.EqualFold(t.Name, want) {
+			if t.Disabled {
+				return "", fmt.Errorf("ticket type disabled: %s", t.Name)
+			}
 			return t.ID, nil
 		}
 	}
 	return "", fmt.Errorf("ticket type not found: %s", want)
+}
+
+func firstNonEmpty(vals ...string) string {
+	for _, v := range vals {
+		if strings.TrimSpace(v) != "" {
+			return strings.TrimSpace(v)
+		}
+	}
+	return ""
 }
