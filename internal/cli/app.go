@@ -11,6 +11,7 @@ import (
 
 	"github.com/Germanicus1/fb/config"
 	"github.com/Germanicus1/fb/internal/commands"
+	"github.com/Germanicus1/fb/internal/service"
 )
 
 // Run is the main entry point for the CLI application
@@ -22,6 +23,8 @@ func Run(version string) error {
 			return handleCheckoutSubcommand()
 		case "clear":
 			return handleClearSubcommand()
+		case "create":
+			return handleCreateSubcommand()
 		}
 	}
 
@@ -31,7 +34,7 @@ func Run(version string) error {
 		if err == flag.ErrHelp {
 			return nil
 		}
-		return fmt.Errorf("error parsing flags: %w", err)
+		return errReported{fmt.Errorf("error parsing flags: %w", err)}
 	}
 
 	// Handle version flag
@@ -121,6 +124,56 @@ func handleCheckoutSubcommand() error {
 	args := fs.Args()
 	return commands.ExecuteCheckout(args, *binFlag, *forceFlag)
 }
+
+// handleCreateSubcommand handles the create subcommand: it builds the real
+// dependencies and hands them to commands.ExecuteCreate.
+func handleCreateSubcommand() error {
+	fs := flag.NewFlagSet("create", flag.ExitOnError)
+	binFlag := fs.String("bin", "", "Bin name or ID (default: bin context)")
+	checkoutFlag := fs.Bool("checkout", false, "Check out the new ticket")
+	forceFlag := fs.Bool("force", false, "Replace an existing checkout (with --checkout)")
+	verbose := fs.Bool("v", false, "Show the created ticket in detail")
+	descFlag := fs.String("d", "", "Description (use - to read stdin)")
+	var assign stringList
+	fs.Var(&assign, "assign", "Assignee email (repeatable; replaces me)")
+	typeFlag := fs.String("type", "", "Ticket type name or ID")
+	// Go's flag package stops at the first positional; re-parse so flags may
+	// follow the title (fb create "T" --bin X).
+	var positional []string
+	rest := os.Args[2:]
+	for {
+		fs.Parse(rest)
+		if fs.NArg() == 0 {
+			break
+		}
+		positional = append(positional, fs.Arg(0))
+		rest = fs.Args()[1:]
+	}
+
+	cfg, err := loadConfiguration()
+	if err != nil {
+		return err
+	}
+	svc, err := service.NewTicketService(cfg)
+	if err != nil {
+		return err
+	}
+	return commands.ExecuteCreate(commands.CreateDeps{
+		Client:           svc.GetClient(),
+		UserEmail:        cfg.UserEmail,
+		Stdin:            os.Stdin,
+		Stdout:           os.Stdout,
+		Stderr:           os.Stderr,
+		IsTerminal:       isTerminal(os.Stdin),
+		ConfigTicketType: cfg.TicketType,
+	}, commands.CreateOptions{Title: strings.Join(positional, " "), Bin: *binFlag, Verbose: *verbose, Description: *descFlag, Assign: assign, Type: *typeFlag, Checkout: *checkoutFlag, Force: *forceFlag})
+}
+
+// stringList is a repeatable string flag.
+type stringList []string
+
+func (s *stringList) String() string     { return strings.Join(*s, ",") }
+func (s *stringList) Set(v string) error { *s = append(*s, v); return nil }
 
 // handleClearSubcommand handles the clear subcommand
 func handleClearSubcommand() error {

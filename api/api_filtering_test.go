@@ -136,12 +136,12 @@ type FilterTestResult struct {
 
 // FilterTestFindings represents all filter testing results
 type FilterTestFindings struct {
-	BaselineTicketCount  int                 `json:"baseline_ticket_count"`
-	BaselineResponseSize int                 `json:"baseline_response_size"`
-	TestResults          []FilterTestResult  `json:"test_results"`
-	SupportsFiltering    bool                `json:"supports_server_side_filtering"`
-	Conclusion           string              `json:"conclusion"`
-	TestTimestamp        string              `json:"test_timestamp"`
+	BaselineTicketCount  int                `json:"baseline_ticket_count"`
+	BaselineResponseSize int                `json:"baseline_response_size"`
+	TestResults          []FilterTestResult `json:"test_results"`
+	SupportsFiltering    bool               `json:"supports_server_side_filtering"`
+	Conclusion           string             `json:"conclusion"`
+	TestTimestamp        string             `json:"test_timestamp"`
 }
 
 // testFilterParameter tests a single filter parameter

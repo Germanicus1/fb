@@ -103,11 +103,11 @@ func TestGetBinsPagination(t *testing.T) {
 
 		// Verify bins from all pages are present
 		expectedBins := map[string]string{
-			"bin1":           "Bin One",
-			"bin2":           "Bin Two",
+			"bin1":              "Bin One",
+			"bin2":              "Bin Two",
 			"cx7oRn0CK1SoAMn0x": "K+Dev.Doing",
-			"bin4":           "Bin Four",
-			"bin5":           "Bin Five",
+			"bin4":              "Bin Four",
+			"bin5":              "Bin Five",
 		}
 
 		for i, bin := range bins {
@@ -542,33 +542,6 @@ func TestPageTokenHeaderPagination(t *testing.T) {
 		}
 		if bins[2].Name != "peter.backlog" {
 			t.Errorf("Expected last bin to be peter.backlog, got %s", bins[2].Name)
-		}
-	})
-
-	t.Run("Given a bin only on the second header-paged page When looking it up by name Then it is found", func(t *testing.T) {
-		// Arrange
-		requestCount := 0
-		server := headerPagedServer(t, "/bins",
-			map[string]string{
-				"":    `[{"_id": "bin1", "name": "Bin One"}]`,
-				"500": `[{"_id": "gv4XfmStwwjEGs6ng", "name": "peter.backlog"}]`,
-			},
-			map[string]string{"": "500"},
-			&requestCount)
-		defer server.Close()
-
-		client := NewClient("test-key")
-		client.baseURL = server.URL
-
-		// Act
-		binID, err := client.LookupBinIDByName("peter.backlog")
-
-		// Assert
-		if err != nil {
-			t.Fatalf("Expected no error, got %v", err)
-		}
-		if binID != "gv4XfmStwwjEGs6ng" {
-			t.Errorf("Expected gv4XfmStwwjEGs6ng, got %s", binID)
 		}
 	})
 

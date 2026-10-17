@@ -176,7 +176,7 @@ func TestStory2_1_DescriptionsWordWrapped(t *testing.T) {
 	descriptionLineCount := 0
 	for _, line := range lines {
 		if strings.Contains(line, "Description:") ||
-		   (strings.HasPrefix(line, "    ") && !strings.Contains(line, ":")) {
+			(strings.HasPrefix(line, "    ") && !strings.Contains(line, ":")) {
 			descriptionLineCount++
 		}
 	}

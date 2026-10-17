@@ -226,23 +226,6 @@ func (c *Client) GetBins() ([]models.Bin, error) {
 	return allBins, nil
 }
 
-// LookupBinIDByName looks up a bin ID by name (case-insensitive)
-func (c *Client) LookupBinIDByName(binName string) (string, error) {
-	bins, err := c.GetBins()
-	if err != nil {
-		return "", err
-	}
-
-	lowerBinName := strings.ToLower(binName)
-	for _, bin := range bins {
-		if strings.ToLower(bin.Name) == lowerBinName {
-			return bin.ID, nil
-		}
-	}
-
-	return "", fmt.Errorf("bin not found: %s", binName)
-}
-
 // GetBoards retrieves all boards from the API
 func (c *Client) GetBoards() ([]models.Board, error) {
 	if err := c.requireBaseURL(); err != nil {
@@ -381,9 +364,19 @@ func readResponseBody(resp *http.Response) ([]byte, error) {
 // checkStatusCode validates the HTTP status code is in the 2xx range
 func checkStatusCode(statusCode int, respBody []byte) error {
 	if statusCode < httpStatusOK || statusCode >= httpStatusMultipleOK {
-		return fmt.Errorf("API request failed with status %d: %s", statusCode, strings.TrimSpace(string(respBody)))
+		return &APIError{StatusCode: statusCode, Body: strings.TrimSpace(string(respBody))}
 	}
 	return nil
+}
+
+// APIError is a non-2xx response from the API.
+type APIError struct {
+	StatusCode int
+	Body       string
+}
+
+func (e *APIError) Error() string {
+	return fmt.Sprintf("API request failed with status %d: %s", e.StatusCode, e.Body)
 }
 
 // buildPaginatedPath constructs a paginated API path with max-results and optional page-token

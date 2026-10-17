@@ -57,7 +57,7 @@ _Avoid_: last bin, default bin, sticky bin, remembered bin
 ## Filtering and output
 
 **Bin filter**:
-The `--bin` argument, accepted as either a bin ID or a bin name. Resolving it means deciding which of the two it is (IDs are alphanumeric; names carry spaces or punctuation) and turning a name into an ID.
+The `--bin` argument, accepted as either a bin ID or a bin name. Resolving it means finding the bin in the bin list, by exact ID or by case-insensitive name. `fb create` alone also passes through an unlisted ID-shaped value, which the server then accepts or rejects.
 _Avoid_: bin query, bin selector, bin argument
 
 **Server-side filtering**:

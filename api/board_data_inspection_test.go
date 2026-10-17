@@ -153,10 +153,10 @@ type BoardDataFindings struct {
 
 // BoardFieldInfo describes a board-related field
 type BoardFieldInfo struct {
-	FieldName  string `json:"field_name"`
-	DataType   string `json:"data_type"`
+	FieldName   string `json:"field_name"`
+	DataType    string `json:"data_type"`
 	SampleValue string `json:"sample_value"`
-	IsPresent  bool   `json:"is_present"`
+	IsPresent   bool   `json:"is_present"`
 }
 
 // analyzeResponseForBoardFields analyzes the API response for board-related fields
