@@ -91,7 +91,7 @@ func ExecuteCreate(d CreateDeps, o CreateOptions) error {
 			TicketName:   title,
 			BinID:        binID,
 			BinName:      binName,
-			CheckedOutAt: time.Now(),
+			CheckedOutAt: time.Now().Format(time.RFC3339),
 		}); err != nil {
 			return fmt.Errorf("ticket created but saving checkout failed: %w", err)
 		}
