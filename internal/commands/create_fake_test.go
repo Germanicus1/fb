@@ -33,7 +33,8 @@ type fakeFlowBoards struct {
 
 	// CreateFault simulates a failing create: "403" answers Access denied;
 	// "drop" closes the connection (a network error), after recording the
-	// ticket when CreateFaultPersists is set.
+	// ticket when CreateFaultPersists is set; "truncate" records the ticket
+	// then cuts the response body short (a read error, not a *url.Error).
 	CreateFault         string
 	CreateFaultPersists bool
 
@@ -99,6 +100,17 @@ func (f *fakeFlowBoards) handle(w http.ResponseWriter, r *http.Request) {
 			}
 			if hj, ok := w.(http.Hijacker); ok {
 				if conn, _, err := hj.Hijack(); err == nil {
+					conn.Close()
+				}
+			}
+			return
+		case "truncate":
+			// The ticket is stored, but the response body is cut short.
+			f.record(p, string(body))
+			if hj, ok := w.(http.Hijacker); ok {
+				if conn, buf, err := hj.Hijack(); err == nil {
+					buf.WriteString("HTTP/1.1 200 OK\r\nContent-Length: 100\r\n\r\nabc")
+					buf.Flush()
 					conn.Close()
 				}
 			}

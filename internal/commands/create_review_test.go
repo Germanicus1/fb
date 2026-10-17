@@ -18,6 +18,18 @@ func TestCreateBinSingleWordName(t *testing.T) {
 	}
 }
 
+func TestCreateResponseReadErrorChecksTicket(t *testing.T) {
+	f := newFakeFlowBoards(t)
+	f.CreateFault = "truncate"
+	r := f.runCreate(CreateOptions{Title: "T", Bin: "Doing"}, "", false, nil)
+	if r.Err != nil {
+		t.Fatalf("unexpected error: %v", r.Err)
+	}
+	if !strings.HasPrefix(r.Stdout, "✓ Created "+f.Creates[0].ID) {
+		t.Errorf("stdout = %q", r.Stdout)
+	}
+}
+
 func TestCreateBinUnknown(t *testing.T) {
 	t.Run("unknown name fails before create", func(t *testing.T) {
 		f := newFakeFlowBoards(t)

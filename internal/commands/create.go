@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -118,15 +117,15 @@ func ExecuteCreate(d CreateDeps, o CreateOptions) error {
 		AssignedIDs:  assignedIDs,
 	}); err != nil {
 		var apiErr *api.APIError
-		var netErr *url.Error
 		switch {
-		case errors.As(err, &apiErr) && apiErr.StatusCode == http.StatusForbidden:
-			return fmt.Errorf("bin not found or no access: %s", binName)
-		case errors.As(err, &netErr):
-			// The request may have reached the server: check before reporting.
+		case !errors.As(err, &apiErr):
+			// Transport failure: the request may have reached the server,
+			// so check before reporting.
 			if _, getErr := d.Client.GetTicket(id); getErr != nil {
 				return err
 			}
+		case apiErr.StatusCode == http.StatusForbidden:
+			return fmt.Errorf("bin not found or no access: %s", binName)
 		default:
 			return err
 		}
