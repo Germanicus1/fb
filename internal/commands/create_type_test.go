@@ -3,7 +3,6 @@ package commands
 import (
 	"strings"
 	"testing"
-
 )
 
 func TestCreateTicketType(t *testing.T) {
