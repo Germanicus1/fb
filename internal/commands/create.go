@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"io"
@@ -42,7 +43,22 @@ type CreateOptions struct {
 // ExecuteCreate creates a Ticket. All validation happens before the single
 // create call. Any returned error means exit status 1.
 func ExecuteCreate(d CreateDeps, o CreateOptions) error {
-	// 1. title
+	// 1. title (prompted when no arguments were given at a terminal)
+	in := bufio.NewReader(d.Stdin)
+	interactive := o.Title == ""
+	if interactive && !d.IsTerminal {
+		return fmt.Errorf("title required")
+	}
+	if interactive {
+		t, err := promptTitle(in, d.Stdout)
+		if err != nil {
+			return err
+		}
+		o.Title = t
+		if o.Description == "" {
+			o.Description = promptDescription(in, d.Stdout)
+		}
+	}
 	title := strings.TrimSpace(o.Title)
 	if title == "" {
 		return fmt.Errorf("title required")
@@ -68,7 +84,7 @@ func ExecuteCreate(d CreateDeps, o CreateOptions) error {
 
 	description := o.Description
 	if description == "-" {
-		b, readErr := io.ReadAll(d.Stdin)
+		b, readErr := io.ReadAll(in)
 		if readErr != nil {
 			return fmt.Errorf("failed to read description from stdin: %w", readErr)
 		}
@@ -157,4 +173,38 @@ func resolveCreateType(c *api.Client, want string) (string, error) {
 		}
 	}
 	return "", fmt.Errorf("ticket type not found: %s", want)
+}
+
+// promptTitle asks for the title until it is non-empty. EOF is "title required".
+func promptTitle(in *bufio.Reader, out io.Writer) (string, error) {
+	for {
+		fmt.Fprint(out, "Title: ")
+		line, err := in.ReadString('\n')
+		if t := strings.TrimSpace(line); t != "" {
+			return t, nil
+		}
+		if err != nil {
+			fmt.Fprintln(out)
+			return "", fmt.Errorf("title required")
+		}
+	}
+}
+
+// promptDescription reads lines until an empty line or EOF; an empty first
+// line means no description.
+func promptDescription(in *bufio.Reader, out io.Writer) string {
+	fmt.Fprintln(out, "Description (optional; finish with an empty line):")
+	var lines []string
+	for {
+		line, err := in.ReadString('\n')
+		line = strings.TrimRight(line, "\r\n")
+		if line == "" {
+			break
+		}
+		lines = append(lines, line)
+		if err != nil {
+			break
+		}
+	}
+	return strings.Join(lines, "\n")
 }
