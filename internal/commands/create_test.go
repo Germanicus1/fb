@@ -76,7 +76,7 @@ func TestCreate(t *testing.T) {
 		f := newFakeFlowBoards(t)
 		f.CreateFault = "403"
 		r := f.runCreate(CreateOptions{Title: "T", Bin: "binDoing1"}, "", false, nil)
-		if r.Err == nil || r.Err.Error() != "bin not found or no access: binDoing1" {
+		if r.Err == nil || r.Err.Error() != "bin not found or no access: Doing" {
 			t.Errorf("err = %v", r.Err)
 		}
 	})

@@ -28,12 +28,17 @@ type fakeFlowBoards struct {
 	UserPaths   []string          // escaped paths of user lookups
 	Bins        []models.Bin
 	TicketTypes []models.TicketType
+	// ConfigTicketType is passed to the command as the `ticket_type` config key.
+	ConfigTicketType string
 
 	// CreateFault simulates a failing create: "403" answers Access denied;
 	// "drop" closes the connection (a network error), after recording the
-	// ticket when CreateFaultPersists is set.
+	// ticket when CreateFaultPersists is set; "truncate" records the ticket
+	// then cuts the response body short (a read error, not a *url.Error).
 	CreateFault         string
 	CreateFaultPersists bool
+	// GetTicketFault makes ticket GETs answer 500.
+	GetTicketFault bool
 
 	mu      sync.Mutex
 	Creates []models.CreateTicketPayload
@@ -101,10 +106,25 @@ func (f *fakeFlowBoards) handle(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			return
+		case "truncate":
+			// The ticket is stored, but the response body is cut short.
+			f.record(p, string(body))
+			if hj, ok := w.(http.Hijacker); ok {
+				if conn, buf, err := hj.Hijack(); err == nil {
+					buf.WriteString("HTTP/1.1 200 OK\r\nContent-Length: 100\r\n\r\nabc")
+					buf.Flush()
+					conn.Close()
+				}
+			}
+			return
 		}
 		f.record(p, string(body))
 		w.WriteHeader(204)
 	case r.Method == "GET" && strings.HasPrefix(r.URL.Path, "/tickets/"):
+		if f.GetTicketFault {
+			http.Error(w, "boom", 500)
+			return
+		}
 		id := strings.TrimPrefix(r.URL.Path, "/tickets/")
 		f.mu.Lock()
 		defer f.mu.Unlock()
@@ -131,6 +151,7 @@ func (f *fakeFlowBoards) record(p models.CreateTicketPayload, body string) {
 type createRun struct {
 	Err    error
 	Stdout string
+	Stderr string
 	Home   string
 }
 
@@ -143,15 +164,18 @@ func (f *fakeFlowBoards) runCreate(opts CreateOptions, stdin string, isTerminal 
 	if setup != nil {
 		setup(home)
 	}
-	var out bytes.Buffer
+	var out, errOut bytes.Buffer
 	err := ExecuteCreate(CreateDeps{
 		Client:     api.NewClientWithBaseURL("test-key", f.Server.URL),
 		UserEmail:  "me@example.com",
 		Stdin:      strings.NewReader(stdin),
 		Stdout:     &out,
+		Stderr:     &errOut,
 		IsTerminal: isTerminal,
+
+		ConfigTicketType: f.ConfigTicketType,
 	}, opts)
-	return createRun{Err: err, Stdout: out.String(), Home: home}
+	return createRun{Err: err, Stdout: out.String(), Stderr: errOut.String(), Home: home}
 }
 
 func writeBinContext(t *testing.T, home, id, name string) {

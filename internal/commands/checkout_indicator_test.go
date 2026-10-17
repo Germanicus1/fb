@@ -103,11 +103,11 @@ user_email: test@example.com
 	// Verify other tickets do NOT have indicator
 	for _, line := range lines {
 		if (strings.Contains(line, "TICKET-001") || strings.Contains(line, "Fix login bug")) &&
-			strings.Contains(line, "CHECKED OUT") {
+		   strings.Contains(line, "CHECKED OUT") {
 			t.Errorf("TICKET-001 should not have indicator, got: %s", line)
 		}
 		if (strings.Contains(line, "TICKET-003") || strings.Contains(line, "Update documentation")) &&
-			strings.Contains(line, "CHECKED OUT") {
+		   strings.Contains(line, "CHECKED OUT") {
 			t.Errorf("TICKET-003 should not have indicator, got: %s", line)
 		}
 	}
