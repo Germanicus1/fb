@@ -439,7 +439,7 @@ Use a YAML validator if needed: https://www.yamllint.com/
 
 ## Version
 
-Current version: 1.4.0
+Current version: 1.4.1
 
 ### What's New in 1.4
 
@@ -449,6 +449,7 @@ Current version: 1.4.0
 - **One-word bin names**: `--bin Backlog` now resolves by name everywhere; unknown bins are an error
 - **Visible errors**: failures print `Error: <message>` instead of exiting silently
 - **Makefile**: `make build`, `make test`, `make install` and friends
+- **Editable prompts** (1.4.1): arrow keys, Home/End and history work in interactive input; Ctrl-C cancels
 
 ### What's New in 1.3
 
