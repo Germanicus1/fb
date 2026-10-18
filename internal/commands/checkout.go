@@ -1,13 +1,13 @@
 package commands
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/Germanicus1/fb/config"
+	"github.com/Germanicus1/fb/internal/prompt"
 	"github.com/Germanicus1/fb/internal/service"
 	"github.com/Germanicus1/fb/internal/state"
 	"github.com/Germanicus1/fb/models"
@@ -80,10 +80,9 @@ func ExecuteBinCheckout(binName string, force bool) error {
 	}
 
 	// Get selection
-	fmt.Print("\nEnter ticket number to checkout: ")
-	reader := bufio.NewReader(os.Stdin)
-	input, _ := reader.ReadString('\n')
-	input = strings.TrimSpace(input)
+	fmt.Println()
+	line, _ := prompt.NewLineReader(os.Stdin, os.Stdout).ReadLine("Enter ticket number to checkout: ")
+	input := strings.TrimSpace(line)
 
 	if input == "" {
 		return fmt.Errorf("cancelled")

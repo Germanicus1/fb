@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"io"
@@ -12,6 +11,7 @@ import (
 
 	"github.com/Germanicus1/fb/api"
 	"github.com/Germanicus1/fb/formatter"
+	"github.com/Germanicus1/fb/internal/prompt"
 	"github.com/Germanicus1/fb/internal/service"
 	"github.com/Germanicus1/fb/internal/state"
 	"github.com/Germanicus1/fb/models"
@@ -52,7 +52,7 @@ type CreateOptions struct {
 // ExecuteCreate creates a Ticket. All validation happens before the single
 // create call. Any returned error means exit status 1.
 func ExecuteCreate(d CreateDeps, o CreateOptions) error {
-	in := bufio.NewReader(d.Stdin)
+	in := prompt.NewLineReader(d.Stdin, d.Stdout)
 	interactive := o.Title == ""
 
 	// 1. a title is required unless we can prompt for it
@@ -105,21 +105,23 @@ func ExecuteCreate(d CreateDeps, o CreateOptions) error {
 
 // promptTitleAndDescription prompts for the title and, unless -d was given,
 // the description.
-func promptTitleAndDescription(in *bufio.Reader, out io.Writer, o *CreateOptions) error {
+func promptTitleAndDescription(in prompt.LineReader, out io.Writer, o *CreateOptions) error {
 	t, err := promptTitle(in, out)
 	if err != nil {
 		return err
 	}
 	o.Title = t
 	if o.Description == "" {
-		o.Description = promptDescription(in, out)
+		if o.Description, err = promptDescription(in, out); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
 // buildCreatePayload validates the title and resolves bin, Ticket type,
 // Assignees and description. The payload's ID is left for the service to set.
-func buildCreatePayload(d CreateDeps, in *bufio.Reader, o CreateOptions, interactive bool) (models.CreateTicketPayload, models.Bin, error) {
+func buildCreatePayload(d CreateDeps, in prompt.LineReader, o CreateOptions, interactive bool) (models.CreateTicketPayload, models.Bin, error) {
 	var p models.CreateTicketPayload
 	title := strings.TrimSpace(o.Title)
 	if title == "" {
@@ -143,7 +145,7 @@ func buildCreatePayload(d CreateDeps, in *bufio.Reader, o CreateOptions, interac
 
 	description := o.Description
 	if description == "-" {
-		b, readErr := io.ReadAll(in)
+		b, readErr := io.ReadAll(d.Stdin)
 		if readErr != nil {
 			return p, models.Bin{}, fmt.Errorf("failed to read description from stdin: %w", readErr)
 		}
@@ -193,7 +195,7 @@ func saveCreatedCheckout(id, title string, bin models.Bin) error {
 // resolveCreateBin returns the bin: --bin (name or id); else, in interactive
 // mode, the picker with the Bin context as default; else the Bin context; else
 // the picker at a terminal; else an error naming --bin.
-func resolveCreateBin(d CreateDeps, in *bufio.Reader, interactive bool, binFlag string) (models.Bin, error) {
+func resolveCreateBin(d CreateDeps, in prompt.LineReader, interactive bool, binFlag string) (models.Bin, error) {
 	if binFlag != "" {
 		return service.ResolveBin(d.Client, binFlag)
 	}
@@ -225,18 +227,24 @@ func firstNonEmpty(vals ...string) string {
 	return ""
 }
 
-// readLine reads one line without its line ending. eof is true when input
-// ended (or failed) while reading it; line may still hold a final partial line.
-func readLine(in *bufio.Reader) (line string, eof bool) {
-	s, err := in.ReadString('\n')
-	return strings.TrimRight(s, "\r\n"), err != nil
+// readLine shows p and reads one line. eof is true when input ended (or failed)
+// while reading it; line may still hold a final partial line. err is set only
+// when the user pressed Ctrl-C.
+func readLine(in prompt.LineReader, p string) (line string, eof bool, err error) {
+	line, readErr := in.ReadLine(p)
+	if errors.Is(readErr, prompt.ErrInterrupted) {
+		return "", true, readErr
+	}
+	return line, readErr != nil, nil
 }
 
 // promptTitle asks for the title until it is non-empty. EOF is "title required".
-func promptTitle(in *bufio.Reader, out io.Writer) (string, error) {
+func promptTitle(in prompt.LineReader, out io.Writer) (string, error) {
 	for {
-		fmt.Fprint(out, "Title: ")
-		line, eof := readLine(in)
+		line, eof, err := readLine(in, "Title: ")
+		if err != nil {
+			return "", err
+		}
 		if t := strings.TrimSpace(line); t != "" {
 			return t, nil
 		}
@@ -249,11 +257,14 @@ func promptTitle(in *bufio.Reader, out io.Writer) (string, error) {
 
 // promptDescription reads lines until an empty line or EOF; an empty first
 // line means no description.
-func promptDescription(in *bufio.Reader, out io.Writer) string {
+func promptDescription(in prompt.LineReader, out io.Writer) (string, error) {
 	fmt.Fprintln(out, "Description (optional; finish with an empty line):")
 	var lines []string
 	for {
-		line, eof := readLine(in)
+		line, eof, err := readLine(in, "")
+		if err != nil {
+			return "", err
+		}
 		if line == "" {
 			break
 		}
@@ -262,7 +273,7 @@ func promptDescription(in *bufio.Reader, out io.Writer) string {
 			break
 		}
 	}
-	return strings.Join(lines, "\n")
+	return strings.Join(lines, "\n"), nil
 }
 
 const maxPickList = 20
@@ -271,14 +282,16 @@ var errNoBinSelected = errors.New("no bin selected")
 
 // pickBin prompts for a bin until one is chosen. Empty input picks def (if
 // any); otherwise input filters bins by case-insensitive substring.
-func pickBin(in *bufio.Reader, out io.Writer, bins []models.Bin, def *models.Bin) (models.Bin, error) {
+func pickBin(in prompt.LineReader, out io.Writer, bins []models.Bin, def *models.Bin) (models.Bin, error) {
 	for {
+		p := "Bin: "
 		if def != nil {
-			fmt.Fprintf(out, "Bin [%s]: ", def.Name)
-		} else {
-			fmt.Fprint(out, "Bin: ")
+			p = fmt.Sprintf("Bin [%s]: ", def.Name)
 		}
-		line, eof := readLine(in)
+		line, eof, err := readLine(in, p)
+		if err != nil {
+			return models.Bin{}, err
+		}
 		input := strings.TrimSpace(line)
 		if input == "" {
 			if def != nil {
@@ -320,13 +333,15 @@ func pickBin(in *bufio.Reader, out io.Writer, bins []models.Bin, def *models.Bin
 
 // numberedPick lists matches and reads a number. An invalid number re-prompts;
 // an empty line returns ok=false so the caller goes back to filtering.
-func numberedPick(in *bufio.Reader, out io.Writer, matches []models.Bin) (models.Bin, bool, error) {
+func numberedPick(in prompt.LineReader, out io.Writer, matches []models.Bin) (models.Bin, bool, error) {
 	for i, b := range matches {
 		fmt.Fprintf(out, "  %d) %s\n", i+1, b.Name)
 	}
 	for {
-		fmt.Fprintf(out, "Number (1-%d): ", len(matches))
-		line, eof := readLine(in)
+		line, eof, err := readLine(in, fmt.Sprintf("Number (1-%d): ", len(matches)))
+		if err != nil {
+			return models.Bin{}, false, err
+		}
 		input := strings.TrimSpace(line)
 		if input == "" {
 			if eof {

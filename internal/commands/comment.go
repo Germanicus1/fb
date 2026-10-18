@@ -1,13 +1,13 @@
 package commands
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
 	"github.com/Germanicus1/fb/config"
+	"github.com/Germanicus1/fb/internal/prompt"
 	"github.com/Germanicus1/fb/internal/service"
 	"github.com/Germanicus1/fb/internal/state"
 	"github.com/Germanicus1/fb/models"
@@ -57,12 +57,13 @@ func ExecuteInteractiveWithOutput(output io.Writer, binFilter string, cfg *confi
 		return nil
 	}
 
-	selectedTicket, err := selectTicketByNumber(os.Stdin, output, tickets)
+	in := prompt.NewLineReader(os.Stdin, output)
+	selectedTicket, err := selectTicketByNumber(in, output, tickets)
 	if err != nil {
 		return err
 	}
 
-	comment, err := enterComment(os.Stdin, output)
+	comment, err := enterComment(in, output)
 	if err != nil {
 		return err
 	}
@@ -129,12 +130,10 @@ func displayTicketsForSelection(output io.Writer, tickets []models.Ticket, binFi
 }
 
 // selectTicketByNumber prompts the user to select a ticket by number
-func selectTicketByNumber(input io.Reader, output io.Writer, tickets []models.Ticket) (*models.Ticket, error) {
+func selectTicketByNumber(in prompt.LineReader, output io.Writer, tickets []models.Ticket) (*models.Ticket, error) {
 	for {
-		fmt.Fprintf(output, "Enter ticket number to comment on: ")
-
-		var userInput string
-		_, err := fmt.Fscanln(input, &userInput)
+		line, err := in.ReadLine("Enter ticket number to comment on: ")
+		userInput := strings.TrimSpace(line)
 		if err != nil || userInput == "" {
 			fmt.Fprintf(output, "Comment cancelled.\n")
 			return nil, fmt.Errorf("operation cancelled")
@@ -154,17 +153,13 @@ func selectTicketByNumber(input io.Reader, output io.Writer, tickets []models.Ti
 }
 
 // enterComment prompts the user to enter a comment
-func enterComment(input io.Reader, output io.Writer) (string, error) {
-	scanner := bufio.NewScanner(input)
-
+func enterComment(in prompt.LineReader, output io.Writer) (string, error) {
 	for {
-		fmt.Fprintf(output, "Enter comment: ")
-
-		if !scanner.Scan() {
+		line, err := in.ReadLine("Enter comment: ")
+		comment := strings.TrimSpace(line)
+		if comment == "" && err != nil {
 			return "", fmt.Errorf("operation cancelled")
 		}
-
-		comment := strings.TrimSpace(scanner.Text())
 		if comment == "" {
 			fmt.Fprintf(output, "Comment cannot be empty. Please enter some text.\n")
 			continue
