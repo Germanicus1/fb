@@ -35,6 +35,8 @@ fb/
 │   │   ├── create_service.go   # Ticket creation
 │   │   └── *_test.go           # 1 test file
 │   │
+│   ├── prompt/                  # Line input with arrow-key editing at a terminal
+│   │
 │   └── state/                   # State persistence
 │       ├── types.go            # State type definitions
 │       ├── checkout.go         # Checkout state management
