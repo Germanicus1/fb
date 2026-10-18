@@ -18,7 +18,7 @@ A command-line tool for viewing, creating and commenting on your Flow Boards tic
 ### Ticket Checkout Workflow
 - **Check out a ticket** to work on it across multiple sessions
 - **Quick comments** without repeated ticket selection (80% time savings)
-- **Smart bin context** remembers your last used bin
+- **Smart bin context**: the bin of your last checkout, saved in `~/.fb/bin_context.json`; `fb checkout` and `fb create` use it when you omit `--bin`
 - **Visual indicators** show checked-out tickets in lists
 - **Persistent state** across terminal sessions and reboots
 - **Force replace** checked-out tickets when needed
